@@ -24,7 +24,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, mbstring, zip
-          coverage: xdebug
+          coverage: pcov
 
       - name: Get Composer cache directory
         id: composer-cache
@@ -41,10 +41,7 @@ jobs:
       - name: Install Composer dependencies
         run: |
           composer update --${{ matrix.dependency-version }} --no-interaction --prefer-dist && \
-          composer update --no-interaction --prefer-dist --with symfony/console:${{ matrix.symfony }} && \
-          composer update --no-interaction --prefer-dist --with \
-            symfony/console:${{ matrix.symfony }} \
-            symfony/finder:${{ matrix.symfony }}
+          composer update --no-interaction --prefer-dist
 
       - name:  Tests
         run: composer test
