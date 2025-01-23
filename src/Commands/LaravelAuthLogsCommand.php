@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace Akira\LaravelAuthLogs\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class LaravelAuthLogsCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'laravel-auth-logs';
 
     public $description = 'My command';
 

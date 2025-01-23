@@ -1,17 +1,17 @@
 {
-    "name": ":vendor_slug/:package_slug",
-    "description": ":package_description",
+    "name": "kidiatoliny/laravel-auth-logs",
+    "description": "This is my package laravel-auth-logs",
     "keywords": [
-        ":vendor_name",
+        "Akira",
         "laravel",
-        ":package_slug"
+        "laravel-auth-logs"
     ],
-    "homepage": "https://github.com/:vendor_slug/:package_slug",
+    "homepage": "https://github.com/kidiatoliny/laravel-auth-logs",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": "author@domain.com",
+            "name": "kid",
+            "email": "kidiatoliny@akira-io.com",
             "role": "Developer"
         }
     ],
@@ -35,13 +35,13 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src/",
-            "VendorName\\Skeleton\\Database\\Factories\\": "database/factories/"
+            "Akira\\LaravelAuthLogs\\": "src/",
+            "Akira\\LaravelAuthLogs\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests/",
+            "Akira\\LaravelAuthLogs\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
         }
     },
@@ -63,10 +63,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "VendorName\\Skeleton\\SkeletonServiceProvider"
+                "Akira\\LaravelAuthLogs\\LaravelAuthLogsServiceProvider"
             ],
             "aliases": {
-                "Skeleton": "VendorName\\Skeleton\\Facades\\Skeleton"
+                "LaravelAuthLogs": "Akira\\LaravelAuthLogs\\Facades\\LaravelAuthLogs"
             }
         }
     },
