@@ -1,0 +1,84 @@
+name: Tests
+
+on: ['push', 'pull_request']
+
+jobs:
+  ci:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        php: ['8.3', '8.4']
+        dependency-version: [prefer-lowest, prefer-stable]
+
+    name: Tests P${{ matrix.php }} - ${{ matrix.os }} - ${{ matrix.dependency-version }}
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, mbstring, zip
+          coverage: xdebug
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        shell: bash
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: dependencies-php-${{ matrix.php }}-os-${{ matrix.os }}-${{ matrix.dependency-version }}-symfony-${{ matrix.symfony }}-composer-${{ hashFiles('composer.json') }}
+          restore-keys: dependencies-php-${{ matrix.php }}-os-${{ matrix.os }}-${{ matrix.dependency-version }}-symfony-${{ matrix.symfony }}-composer-
+
+      - name: Install Composer dependencies
+        run: |
+          composer update --${{ matrix.dependency-version }} --no-interaction --prefer-dist && \
+          composer update --no-interaction --prefer-dist --with symfony/console:${{ matrix.symfony }} && \
+          composer update --no-interaction --prefer-dist --with \
+            symfony/console:${{ matrix.symfony }} \
+            symfony/finder:${{ matrix.symfony }}
+
+      - name:  Tests
+        run: composer test
+
+      # Failure Notification
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+          -d '{
+               "content": "🚨 Workflow **failed** for **${{ github.repository }}**!",
+               "embeds": [
+                 {
+                   "title": "Workflow Failure (PHP ${{ matrix.php-versions }})",
+                   "description": "Branch: `${{ github.ref_name }}`\nTriggeredBy: `${{ github.triggering_actor}}`\nCommit: `${{ github.sha}}`",
+                   "color": 16711680
+                 }
+               ]
+             }' \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      # Success Notification
+      - name: Notify on Success
+        if: success() && always()
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+          -d '{
+                "content": "✅ Workflow **succeeded** for **${{ github.repository }}**!",
+                "embeds": [
+                  {
+                    "title": "Success (PHP ${{ matrix.php-versions }})",
+                    "description": "Branch: `${{ github.ref_name }}`\nTriggeredBy: `${{ github.triggering_actor}}`\nCommit: `${{ github.sha}}`",
+                    "color": 65280
+                  }
+                ]
+              }' \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}

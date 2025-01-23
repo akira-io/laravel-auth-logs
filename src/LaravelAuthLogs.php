@@ -2,4 +2,8 @@
 
 namespace Akira\LaravelAuthLogs;
 
-class LaravelAuthLogs {}
+class LaravelAuthLogs {
+    
+    public function __construccct() {}
+    
+}
