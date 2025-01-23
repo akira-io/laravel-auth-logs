@@ -2,9 +2,9 @@
 
 namespace Akira\LaravelAuthLogs;
 
+use Akira\LaravelAuthLogs\Commands\LaravelAuthLogsCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Akira\LaravelAuthLogs\Commands\LaravelAuthLogsCommand;
 
 class LaravelAuthLogsServiceProvider extends PackageServiceProvider
 {

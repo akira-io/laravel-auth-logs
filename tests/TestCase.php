@@ -2,9 +2,9 @@
 
 namespace Akira\LaravelAuthLogs\Tests;
 
+use Akira\LaravelAuthLogs\LaravelAuthLogsServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Akira\LaravelAuthLogs\LaravelAuthLogsServiceProvider;
 
 class TestCase extends Orchestra
 {
