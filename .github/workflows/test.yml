@@ -10,7 +10,7 @@ jobs:
       matrix:
         os: [ ubuntu-latest, macos-latest ]
         php: [ '8.3' ]
-        dependency-version: [ prefer-lowest, prefer-stable ]
+        dependency-version: [prefer-stable]
 
     name: Tests P${{ matrix.php }} - ${{ matrix.os }} - ${{ matrix.dependency-version }}
 
@@ -70,7 +70,7 @@ jobs:
                 "content": "✅ Workflow **succeeded** for **${{ github.repository }}**!",
                 "embeds": [
                   {
-                    "title": "Success (PHP ${{ matrix.php-versions }})",
+                    "title": "Success (PHP ${{ matrix.php }} - ${{ matrix.os }})",
                     "description": "Branch: `${{ github.ref_name }}`\nTriggeredBy: `${{ github.triggering_actor}}`\nCommit: `${{ github.sha}}`",
                     "color": 65280
                   }
