@@ -30,7 +30,7 @@
         "phpstan/phpstan-deprecation-rules": "^1.2.1",
         "phpstan/phpstan-phpunit": "^1.4.2",
         "spatie/laravel-ray": "^1.39",
-        "pestphp/pest-plugin-type-coverage": "3.2.3",
+        "pestphp/pest-plugin-type-coverage": "^3.2.3",
         "pestphp/pest": "^3.7.4",
         "pestphp/pest-plugin-laravel": "^3.0",
         "rector/rector": "^1.2.10"
