@@ -2,7 +2,7 @@
 
 namespace Akira\LaravelAuthLogs;
 
-use Akira\LaravelAuthLogs\Commands\LaravelAuthLogsCommand;
+use Akira\LaravelAuthLogs\Commands\AuthLogsInstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -20,6 +20,6 @@ class LaravelAuthLogsServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasViews()
             ->hasMigration('create_laravel_auth_logs_table')
-            ->hasCommand(LaravelAuthLogsCommand::class);
+            ->hasCommand(AuthLogsInstallCommand::class);
     }
 }

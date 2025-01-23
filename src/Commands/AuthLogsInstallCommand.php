@@ -4,9 +4,9 @@ namespace Akira\LaravelAuthLogs\Commands;
 
 use Illuminate\Console\Command;
 
-class LaravelAuthLogsCommand extends Command
+class AuthLogsInstallCommand extends Command
 {
-    public $signature = 'laravel-auth-logs';
+    public $signature = 'auth-logs:install';
 
     public $description = 'My command';
 
