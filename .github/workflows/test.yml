@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        os: [ ubuntu-latest, macos-latest ]
         php: [ '8.3' ]
         dependency-version: [ prefer-lowest, prefer-stable ]
 
@@ -53,7 +53,7 @@ jobs:
                "content": "🚨 Workflow **failed** for **${{ github.repository }}**!",
                "embeds": [
                  {
-                   "title": "Workflow Failure (PHP ${{ matrix.php-versions }})",
+                   "title": "Workflow Failure (PHP ${{ matrix.php }} - ${{ matrix.os }})",
                    "description": "Branch: `${{ github.ref_name }}`\nTriggeredBy: `${{ github.triggering_actor}}`\nCommit: `${{ github.sha}}`",
                    "color": 16711680
                  }
