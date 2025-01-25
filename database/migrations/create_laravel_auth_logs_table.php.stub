@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('laravel_auth_logs_table', function (Blueprint $table) {
+        Schema::create( config('auth-logs.table_name'), function (Blueprint $table) {
             $table->id();
             $table->morphs('authenticatable');
             $table->string('ip_address', 45)->nullable();

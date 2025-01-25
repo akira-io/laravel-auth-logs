@@ -20,7 +20,6 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
 {
-    
     /**
      * Configure the package's behavior, such as its name, configuration, views,
      * migrations, and custom commands. Additionally, register event listeners
@@ -30,26 +29,25 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
      */
     public function configurePackage(Package $package): void
     {
-        
+
         $package
             ->name('laravel-auth-logs')
             ->hasConfigFile()
             ->hasViews()
             ->hasMigration('create_laravel_auth_logs_table')
             ->hasCommand(AuthLogsInstallCommand::class);
-        
+
         $event = $this->app->make(Dispatcher::class);
-        
+
         $this->subscribeToLoginEvent($event);
-        
+
         $this->subscribeToFailedLoginEvent($event);
-        
+
         $this->subscribeLogoutEvent($event);
-        
+
         $this->subscribeToLogoutOtherDeviceEvent($event);
     }
-    
-    
+
     /**
      * Subscribe to the login event to log successful authentication attempts.
      *
@@ -57,14 +55,13 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
      */
     private function subscribeToLoginEvent(Dispatcher $event): void
     {
-        
+
         $event->listen(
             events  : config('auth-logs.events.login', Login::class),
             listener: config('auth-logs.listeners.login', LoginListener::class),
         );
     }
-    
-    
+
     /**
      * Subscribe to the failed login event to log authentication failures.
      *
@@ -72,14 +69,13 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
      */
     private function subscribeToFailedLoginEvent(Dispatcher $event): void
     {
-        
+
         $event->listen(
             events  : config('auth-logs.events.failed', Failed::class),
             listener: config('auth-logs.listeners.failed', FailedLoginListener::class),
         );
     }
-    
-    
+
     /**
      * Subscribe to the logout event to log user logout activities.
      *
@@ -87,14 +83,13 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
      */
     private function subscribeLogoutEvent(Dispatcher $event): void
     {
-        
+
         $event->listen(
             events  : config('auth-logs.events.logout', Logout::class),
             listener: config('auth-logs.listeners.logout', LogoutListener::class),
         );
     }
-    
-    
+
     /**
      * Subscribe to the "logout other devices" event to log when a user logs out
      * from other active sessions on different devices.
@@ -103,11 +98,10 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
      */
     private function subscribeToLogoutOtherDeviceEvent(Dispatcher $event): void
     {
-        
+
         $event->listen(
             events  : config('auth-logs.events.logout-other-devices', OtherDeviceLogout::class),
             listener: config('auth-logs.listeners.other_device_logout', OtherDeviceLogoutListener::class),
         );
     }
-    
 }

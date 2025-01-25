@@ -11,7 +11,7 @@ trait AuthLogs
     /**
      * Get the authentications for the user.
      */
-    public function authentications()
+    public function authenticationLogs()
     {
 
         return $this->morphMany(AuthenticationLog::class, 'authenticatable')
