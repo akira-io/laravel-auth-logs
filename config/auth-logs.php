@@ -2,6 +2,17 @@
 
 declare(strict_types=1);
 
+use Akira\LaravelAuthLogs\Listeners\FailedLoginListener;
+use Akira\LaravelAuthLogs\Listeners\LoginListener;
+use Akira\LaravelAuthLogs\Listeners\LogoutListener;
+use Akira\LaravelAuthLogs\Listeners\OtherDeviceLogoutListener;
+use Akira\LaravelAuthLogs\Templates\FailedLogin;
+use Akira\LaravelAuthLogs\Templates\NewDevice;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
+use Illuminate\Auth\Events\OtherDeviceLogout;
+
 return [
 
     /*
@@ -29,6 +40,18 @@ return [
     'db_connection' => 'null',
 
     /*
+     / --------------------------------------------------------------------------
+     / Notification Via
+     / --------------------------------------------------------------------------
+     /
+     / Define the notification channels that should be used to send notifications
+     / for authentication events. The default channels include 'mail'. You can
+     / add other channels such as 'slack' or 'nexmo' based on your application.
+     /
+     */
+    'notification_via' => ['mail'],
+
+    /*
     |--------------------------------------------------------------------------
     | Events to Listen To
     |--------------------------------------------------------------------------
@@ -39,8 +62,10 @@ return [
     |
     */
     'events' => [
-        // Example: \Illuminate\Auth\Events\Login::class,
-        // Add events here
+        'login' => Login::class,
+        'failed' => Failed::class,
+        'logout' => Logout::class,
+        'logout-other-devices' => OtherDeviceLogout::class,
     ],
 
     /*
@@ -54,31 +79,31 @@ return [
     |
     */
     'listeners' => [
-        // Example: \App\Listeners\LogAuthenticationEvent::class,
-        // Add listeners here
+        'login' => LoginListener::class,
+        'failed' => FailedLoginListener::class,
+        'logout' => LogoutListener::class,
+        'other_device_logout' => OtherDeviceLogoutListener::class,
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Notifications
+    | Templates
     |--------------------------------------------------------------------------
     |
-    | Configure notifications for authentication events. You can enable or
+    | Configure templates for authentication events. You can enable or
     | disable notifications for specific actions such as detecting a new
     | device or failed login attempts. Custom templates can also be defined
     | for each notification type.
     |
     */
-    'notifications' => [
+    'templates' => [
         'new_device' => [
             'enabled' => env('AUTH_LOGS_NEW_DEVICE_NOTIFICATION', true),
-            'location' => true, // Include location details in the notification
-            'template' => 'Akira\LaravelAuthLogs\Notifications\NewDevice', // Notification class
+            'template' => NewDevice::class,
         ],
         'failed_login' => [
             'enabled' => env('AUTH_LOGS_FAILED_LOGIN_NOTIFICATION', true),
-            'location' => true, // Include location details in the notification
-            'template' => 'Akira\LaravelAuthLogs\Notifications\NewDevice', // Notification class
+            'template' => FailedLogin::class,
         ],
     ],
 
