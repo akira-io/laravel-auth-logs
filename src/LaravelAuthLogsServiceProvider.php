@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akira\LaravelAuthLogs;
 
 use Akira\LaravelAuthLogs\Commands\AuthLogsInstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
-class LaravelAuthLogsServiceProvider extends PackageServiceProvider
+final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {

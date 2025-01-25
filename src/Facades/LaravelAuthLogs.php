@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Akira\LaravelAuthLogs\Facades;
 
 use Illuminate\Support\Facades\Facade;
@@ -7,7 +9,7 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @see \Akira\LaravelAuthLogs\LaravelAuthLogs
  */
-class LaravelAuthLogs extends Facade
+final class LaravelAuthLogs extends Facade
 {
     protected static function getFacadeAccessor(): string
     {

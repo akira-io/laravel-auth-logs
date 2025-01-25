@@ -1,7 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 return [
-    
+
     /*
     |--------------------------------------------------------------------------
     | Authentication Logs Table Name
@@ -13,7 +15,7 @@ return [
     |
     */
     'table_name' => 'authentication_logs',
-    
+
     /*
     |--------------------------------------------------------------------------
     | Database Connection
@@ -25,7 +27,7 @@ return [
     |
     */
     'db_connection' => 'null',
-    
+
     /*
     |--------------------------------------------------------------------------
     | Events to Listen To
@@ -40,7 +42,7 @@ return [
         // Example: \Illuminate\Auth\Events\Login::class,
         // Add events here
     ],
-    
+
     /*
     |--------------------------------------------------------------------------
     | Event Listeners
@@ -55,7 +57,7 @@ return [
         // Example: \App\Listeners\LogAuthenticationEvent::class,
         // Add listeners here
     ],
-    
+
     /*
     |--------------------------------------------------------------------------
     | Notifications
@@ -79,7 +81,7 @@ return [
             'template' => 'Akira\LaravelAuthLogs\Notifications\NewDevice', // Notification class
         ],
     ],
-    
+
     /*
     |--------------------------------------------------------------------------
     | Log Retention Period
