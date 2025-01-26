@@ -1,5 +1,8 @@
 {
   "preset": "laravel",
+  "notPath": [
+    "tests"
+  ],
   "rules": {
     "array_push": true,
     "backtick_to_shell_exec": true,

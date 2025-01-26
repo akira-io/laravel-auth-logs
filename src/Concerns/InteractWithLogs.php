@@ -9,14 +9,20 @@ use Akira\LaravelAuthLogs\ValueObjects\Location;
 
 trait InteractWithLogs
 {
+    /**
+     *  Get the login date.
+     */
     public function getLoginAt(): string
     {
 
         return $this
             ->log
-            ->login_at->format(config('auth-logs.date_format'));
+            ->login_at->format(type(config('auth-logs.date_format'))->asString());
     }
 
+    /**
+     *  Get the IP address.
+     */
     public function getIpAddress(): string
     {
 
@@ -25,6 +31,9 @@ trait InteractWithLogs
             ->ip_address;
     }
 
+    /**
+     *  Get the user agent.
+     */
     public function getUserAgent(): string
     {
 
@@ -33,6 +42,9 @@ trait InteractWithLogs
             ->user_agent;
     }
 
+    /**
+     *  Get the location.
+     */
     public function getFullLocation(): string
     {
 

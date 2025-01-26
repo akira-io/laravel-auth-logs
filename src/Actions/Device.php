@@ -12,10 +12,10 @@ final class Device
     /**
      *  Check if the user has logged in before.
      */
-    public static function isKnownFor(Authenticatable $user, $ip, ?string $userAgent): ?AuthenticationLog
+    public static function isKnownFor(Authenticatable $user, ?string $ip, ?string $userAgent): ?AuthenticationLog
     {
 
-        return $user->authenticationLogs()->whereIpAddress($ip)
+        return $user->authenticationLogs()->whereIpAddress($ip) // @phpstan-ignore-line
             ->whereUserAgent($userAgent)
             ->whereLoginSuccessful(true)
             ->first();

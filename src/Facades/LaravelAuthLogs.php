@@ -11,8 +11,12 @@ use Illuminate\Support\Facades\Facade;
  */
 final class LaravelAuthLogs extends Facade
 {
+    /**
+     * Get the registered name of the component.
+     */
     protected static function getFacadeAccessor(): string
     {
+
         return \Akira\LaravelAuthLogs\LaravelAuthLogs::class;
     }
 }

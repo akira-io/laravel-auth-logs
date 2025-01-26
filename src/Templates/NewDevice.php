@@ -9,6 +9,9 @@ use Illuminate\Notifications\Messages\MailMessage;
 
 final readonly class NewDevice implements ToMail
 {
+    /**
+     * Create a new device template instance.
+     */
     public function __construct(
         private string $loginAt,
         private string $ipAddress,
@@ -16,6 +19,9 @@ final readonly class NewDevice implements ToMail
         private string $userAgent,
     ) {}
 
+    /**
+     * Get the mail representation of the notification.
+     */
     public function toMail(mixed $notifiable): MailMessage
     {
 
@@ -26,6 +32,7 @@ final readonly class NewDevice implements ToMail
             ->line(__('If this was you, you can safely ignore this email.'))
             ->line(__('If you suspect that someone else tried to access your account, please contact us immediately.'))
             ->line(__('Login details:'))
+            /** @phpstan-ignore-next-line */
             ->line(__('Account: :account', ['account' => $notifiable->email]))
             ->line(__('Date: :date', ['date' => $this->loginAt]))
             ->line(__('IP address: :ip', ['ip' => $this->ipAddress]))

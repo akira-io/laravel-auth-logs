@@ -9,6 +9,9 @@ use Illuminate\Notifications\Messages\MailMessage;
 
 final readonly class FailedLogin implements ToMail
 {
+    /**
+     * Create a new  failed  login template.
+     */
     public function __construct(
         private string $loginAt,
         private string $ipAddress,
@@ -16,6 +19,9 @@ final readonly class FailedLogin implements ToMail
         private string $userAgent,
     ) {}
 
+    /**
+     * Get the mail representation of the notification.
+     */
     public function toMail(mixed $notifiable): MailMessage
     {
 
@@ -26,7 +32,7 @@ final readonly class FailedLogin implements ToMail
             ->line(__('If this was you, you can safely ignore this email.'))
             ->line(__('If you suspect that someone else tried to access your account, please contact us immediately.'))
             ->line(__('Login details:'))
-            ->line(__('Account: :account', ['account' => $notifiable->email]))
+            ->line(__('Account: :account', ['account' => $notifiable->email])) // @phpstan-ignore-line
             ->line(__('Date: :date', ['date' => $this->loginAt]))
             ->line(__('IP address: :ip', ['ip' => $this->ipAddress]))
             ->line(__('User agent: :user_agent', ['user_agent' => $this->userAgent]))

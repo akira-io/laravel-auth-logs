@@ -6,10 +6,9 @@ namespace Akira\LaravelAuthLogs;
 
 use Akira\LaravelAuthLogs\Commands\AuthLogsInstallCommand;
 use Akira\LaravelAuthLogs\Listeners\FailedLoginListener;
-use Akira\LaravelAuthLogs\Listeners\LoginListener;
 use Akira\LaravelAuthLogs\Listeners\LogoutListener;
 use Akira\LaravelAuthLogs\Listeners\OtherDeviceLogoutListener;
-use Illuminate\Auth\Events\Failed;
+use Akira\LaravelAuthLogs\Templates\FailedLogin;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\OtherDeviceLogout;
@@ -57,8 +56,8 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
     {
 
         $event->listen(
-            events  : config('auth-logs.events.login', Login::class),
-            listener: config('auth-logs.listeners.login', LoginListener::class),
+            events  : type(config('auth-logs.events.login', Login::class))->asString(),
+            listener: type(config('auth-logs.events.login', Login::class))->asString(),
         );
     }
 
@@ -71,8 +70,9 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
     {
 
         $event->listen(
-            events  : config('auth-logs.events.failed', Failed::class),
-            listener: config('auth-logs.listeners.failed', FailedLoginListener::class),
+
+            events  : type(config('auth-logs.events.failed', FailedLogin::class))->asString(),
+            listener: type(config('auth-logs.listeners.failed', FailedLoginListener::class))->asString(),
         );
     }
 
@@ -85,8 +85,8 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
     {
 
         $event->listen(
-            events  : config('auth-logs.events.logout', Logout::class),
-            listener: config('auth-logs.listeners.logout', LogoutListener::class),
+            events  : type(config('auth-logs.events.logout', Logout::class))->asString(),
+            listener: type(config('auth-logs.listeners.logout', LogoutListener::class))->asString(),
         );
     }
 
@@ -100,8 +100,8 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
     {
 
         $event->listen(
-            events  : config('auth-logs.events.logout-other-devices', OtherDeviceLogout::class),
-            listener: config('auth-logs.listeners.other_device_logout', OtherDeviceLogoutListener::class),
+            events  : type(config('auth-logs.events.logout', OtherDeviceLogout::class))->asString(),
+            listener: type(config('auth-logs.listeners.logout', OtherDeviceLogoutListener::class))->asString(),
         );
     }
 }

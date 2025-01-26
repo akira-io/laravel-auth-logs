@@ -14,28 +14,32 @@ final readonly class Location
 
     public string $timezone;
 
-    public string|float $latitude;
+    public string $latitude;
 
-    public string|float $longitude;
+    public string $longitude;
 
     public string $isoCode;
 
     /**
      * Construct a new location.
+     *
+     * @param  Collection<string,string>  $data
      */
     public function __construct(Collection $data)
     {
 
-        $this->isoCode = data_get($data, 'countryCode');
-        $this->country = data_get($data, 'country');
-        $this->city = data_get($data, 'city');
-        $this->latitude = data_get($data, 'lat');
-        $this->longitude = data_get($data, 'lon');
-        $this->timezone = data_get($data, 'timezone');
+        $this->isoCode = (string) $data->get('iso_code');
+        $this->country = (string) $data->get('country');
+        $this->city = (string) $data->get('city');
+        $this->latitude = (string) $data->get('lat');
+        $this->longitude = (string) $data->get('lon');
+        $this->timezone = (string) $data->get('timezone');
     }
 
     /**
      * Make a new location.
+     *
+     * @param  Collection<string,mixed>  $data
      */
     public static function make(Collection $data): self
     {

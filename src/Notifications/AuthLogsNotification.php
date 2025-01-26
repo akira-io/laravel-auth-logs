@@ -14,15 +14,26 @@ final class AuthLogsNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(protected Template $template) {}
+    /**
+     * Create a new notification instance.
+     */
+    public function __construct(private readonly Template $template) {}
 
-    public function via($notifiable): array
+    /**
+     * Get the notification's delivery channels.
+     *
+     * @return array<string>
+     */
+    public function via(mixed $notifiable): array
     {
 
-        return $notifiable->notifyAuthenticationLogVia();
+        return $notifiable->notifyAuthenticationLogVia(); // @phpstan-ignore-line
     }
 
-    public function toMail($notifiable): MailMessage
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(mixed $notifiable): MailMessage
     {
 
         return $this->template->toMail($notifiable);

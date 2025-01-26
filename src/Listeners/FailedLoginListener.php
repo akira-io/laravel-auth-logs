@@ -11,14 +11,17 @@ use Illuminate\Auth\Events\Failed;
 
 final class FailedLoginListener
 {
-    public function __construct() {}
-
+    /**
+     * Handle the event.
+     */
     public function handle(Failed $event): void
     {
 
-        $user = $event->user;
+        $user = type($event->user)->not()->null();
 
         $template = config('auth-logs.templates.failed_login.template', FailedLogin::class);
+
+        $template = type($template)->asString();
 
         $log = CreateAuthenticationLog::for($user);
 

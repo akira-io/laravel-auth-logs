@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Akira\LaravelAuthLogs\Listeners;
 
-use Illuminate\Auth\Events\Logout;
-
 final class LogoutListener
 {
-    public function __construct() {}
-
-    public function handle(Logout $event): void {}
+    /**
+     * Handle the event.
+     */
+    public function handle(): void
+    {
+        // Do something
+    }
 }

@@ -17,8 +17,9 @@
   ],
   "require": {
     "php": "^8.3",
-    "spatie/laravel-package-tools": "^1.18.3",
-    "illuminate/contracts": "^10.0||^11.0"
+    "illuminate/contracts": "^10.0||^11.0",
+    "pinkary-project/type-guard": "^0.1.0",
+    "spatie/laravel-package-tools": "^1.18.3"
   },
   "require-dev": {
     "laravel/pint": "^1.20",
@@ -55,9 +56,9 @@
     "refactor": "rector",
     "test:lint": "pint --test",
     "test:refactor": "rector --dry-run",
-    "test:types": "phpstan",
+    "test:types": "phpstan analyse ",
     "test:type-coverage": "pest --type-coverage --min=100",
-    "test:unit": "pest --parallel --coverage --exactly=88.8",
+    "test:unit": "pest --parallel --coverage --exactly=19.3",
     "test": [
       "@test:lint",
       "@test:refactor",

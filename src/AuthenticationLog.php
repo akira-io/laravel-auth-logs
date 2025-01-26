@@ -44,7 +44,7 @@ final class AuthenticationLog extends Model
     public function getConnectionName(): string
     {
 
-        return config('auth-logs.db_connection', parent::getConnectionName());
+        return type(config('auth-logs.db_connection', parent::getConnectionName()))->asString();
     }
 
     /**
@@ -53,11 +53,13 @@ final class AuthenticationLog extends Model
     public function getTable(): string
     {
 
-        return config('auth-logs.table_name', parent::getTable());
+        return type(config('auth-logs.table_name', parent::getTable()))->asString();
     }
 
     /**
      * Get the authenticatable model associated with the log.
+     *
+     * @return MorphTo<Model, $this>
      */
     public function authenticatable(): MorphTo
     {
