@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Akira\LaravelAuthLogs\Listeners;
 
-use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
+use Akira\LaravelAuthLogs\Actions\CreateAuthenticationLog;
+use Akira\LaravelAuthLogs\Actions\SendNotification;
 use Akira\LaravelAuthLogs\Templates\FailedLogin;
 use Illuminate\Auth\Events\Failed;
 
@@ -17,16 +18,10 @@ final class FailedLoginListener
 
         $user = $event->user;
 
-        $template = config('auth-logs.templates.failed_login', FailedLogin::class);
+        $template = config('auth-logs.templates.failed_login.template', FailedLogin::class);
 
-        $user->authenticationLogs()->create([
-            'login_at' => now(),
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'location' => request()->location,
-            'is_successful' => false,
-        ]);
+        $log = CreateAuthenticationLog::for($user);
 
-        $user->notify(new AuthLogsNotification($template));
+        SendNotification::make(authenticatable: $user, template: $template, log: $log)->send();
     }
 }

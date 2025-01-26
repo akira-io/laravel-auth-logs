@@ -20,45 +20,63 @@ return [
     | Authentication Logs Table Name
     |--------------------------------------------------------------------------
     |
-    | This value determines the name of the database table where authentication
-    | logs will be stored. You can customize this value to fit your preferred
-    | naming convention.
+    | Specify the database table name for storing authentication logs. Customize
+    | this value to align with your application's naming conventions.
     |
     */
     'table_name' => 'authentication_logs',
 
     /*
     |--------------------------------------------------------------------------
+    | Notification Date Format
+    |--------------------------------------------------------------------------
+    |
+    | Define the date format for notifications related to authentication events.
+    | This format will be applied consistently across notifications.
+    |
+    */
+    'date_format' => 'Y-m-d H:i:s',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Geolocation API
+    |--------------------------------------------------------------------------
+    |
+    | Define the API endpoint used to fetch geolocation information. Currently,
+    | only 'ip-api.com' is supported. Customize this URL as needed.
+    |
+    */
+    'geolocation_api' => 'http://ip-api.com/json',
+
+    /*
+    |--------------------------------------------------------------------------
     | Database Connection
     |--------------------------------------------------------------------------
     |
-    | Here you may specify the database connection that should be used for
-    | storing authentication logs. If set to 'null', the default connection
-    | from the database configuration will be used.
+    | Specify the database connection for storing authentication logs. Leave it
+    | as 'null' to use the default connection specified in the database config.
     |
     */
-    'db_connection' => 'null',
+    'db_connection' => env('AUTH_LOGS_DB_CONNECTION', env('DB_CONNECTION', 'sqlite')),
 
     /*
-     / --------------------------------------------------------------------------
-     / Notification Via
-     / --------------------------------------------------------------------------
-     /
-     / Define the notification channels that should be used to send notifications
-     / for authentication events. The default channels include 'mail'. You can
-     / add other channels such as 'slack' or 'nexmo' based on your application.
-     /
-     */
+    |--------------------------------------------------------------------------
+    | Notification Channels
+    |--------------------------------------------------------------------------
+    |
+    | Define the notification channels for authentication events. The default
+    | channel is 'mail'. Add other channels such as 'slack' or 'nexmo' if required.
+    |
+    */
     'notification_via' => ['mail'],
 
     /*
     |--------------------------------------------------------------------------
-    | Events to Listen To
+    | Authentication Events to Log
     |--------------------------------------------------------------------------
     |
-    | Define the authentication-related events that should be logged. Add
-    | the class names of the events you want to monitor. This allows for
-    | flexibility in tailoring the logs to your application's needs.
+    | List the authentication events to monitor. Include the event class names
+    | to ensure proper logging of these events.
     |
     */
     'events' => [
@@ -70,12 +88,11 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Event Listeners
+    | Custom Event Listeners
     |--------------------------------------------------------------------------
     |
-    | Specify custom listeners for the defined events. These listeners can
-    | handle additional logic when an event occurs. Use this array to
-    | register the listeners for the authentication events.
+    | Register custom listeners for the specified authentication events. Each
+    | listener can handle additional logic when an event occurs.
     |
     */
     'listeners' => [
@@ -87,22 +104,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Templates
+    | Notification Templates
     |--------------------------------------------------------------------------
     |
-    | Configure templates for authentication events. You can enable or
-    | disable notifications for specific actions such as detecting a new
-    | device or failed login attempts. Custom templates can also be defined
-    | for each notification type.
+    | Configure notification templates for authentication events. Enable or disable
+    | notifications and specify custom templates for each type of event.
     |
     */
     'templates' => [
         'new_device' => [
-            'enabled' => env('AUTH_LOGS_NEW_DEVICE_NOTIFICATION', true),
+            'notification' => env('AUTH_LOGS_NEW_DEVICE_NOTIFICATION', true),
             'template' => NewDevice::class,
         ],
         'failed_login' => [
-            'enabled' => env('AUTH_LOGS_FAILED_LOGIN_NOTIFICATION', true),
+            'notification' => env('AUTH_LOGS_FAILED_LOGIN_NOTIFICATION', true),
             'template' => FailedLogin::class,
         ],
     ],
@@ -112,9 +127,8 @@ return [
     | Log Retention Period
     |--------------------------------------------------------------------------
     |
-    | This value determines the number of days to retain authentication logs
-    | in the database. Logs older than this period will be automatically
-    | purged to ensure optimal database performance.
+    | Specify the retention period for authentication logs (in days). Logs older
+    | than this period will be purged automatically to optimize database usage.
     |
     */
     'purge' => 365,

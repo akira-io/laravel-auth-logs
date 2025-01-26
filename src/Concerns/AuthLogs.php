@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Akira\LaravelAuthLogs\Concerns;
 
 use Akira\LaravelAuthLogs\AuthenticationLog;
+use Carbon\Carbon;
 
 trait AuthLogs
 {
@@ -112,5 +113,15 @@ trait AuthLogs
 
         return $this->latestAuthentication()
             ->update(['logout_at' => now(), 'cleared_by_user' => true]);
+    }
+
+    /**
+     *  Check if the user is new.
+     */
+    public function isNew(): bool
+    {
+
+        return \Illuminate\Support\Carbon::parse($this->{$this->getCreatedAtColumn()})
+            ->diffInMinutes(Carbon::now()) < 1;
     }
 }

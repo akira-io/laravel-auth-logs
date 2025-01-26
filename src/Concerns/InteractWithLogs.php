@@ -4,33 +4,24 @@ declare(strict_types=1);
 
 namespace Akira\LaravelAuthLogs\Concerns;
 
-use Akira\LaravelAuthLogs\AuthenticationLog;
+use Akira\LaravelAuthLogs\Actions\GetLocation;
 use Akira\LaravelAuthLogs\ValueObjects\Location;
 
 trait InteractWithLogs
 {
-    public function __construct(public AuthenticationLog $authenticationLog) {}
-
-    final public static function make(AuthenticationLog $authenticationLog): static
-    {
-
-        return app(static::class, ['authenticationLog' => $authenticationLog]);
-    }
-
     public function getLoginAt(): string
     {
 
         return $this
-            ->authenticationLog
-            ->login_at
-            ->format(config('project.datetime_format'));
+            ->log
+            ->login_at->format(config('auth-logs.date_format'));
     }
 
     public function getIpAddress(): string
     {
 
         return $this
-            ->authenticationLog
+            ->log
             ->ip_address;
     }
 
@@ -38,14 +29,20 @@ trait InteractWithLogs
     {
 
         return $this
-            ->authenticationLog
+            ->log
             ->user_agent;
     }
 
     public function getFullLocation(): string
     {
 
-        return Location::make($this->authenticationLog->location)
+        $location = GetLocation::make($this->getIpAddress());
+
+        if ($location->isEmpty()) {
+            return __('Unknown');
+        }
+
+        return Location::make($location)
             ->getFullLocation();
     }
 }

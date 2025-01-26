@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Akira\LaravelAuthLogs\ValueObjects;
 
+use Illuminate\Support\Collection;
+
 final readonly class Location
 {
-    public string $ip;
-
     public string $city;
 
     public string $country;
@@ -23,22 +23,21 @@ final readonly class Location
     /**
      * Construct a new location.
      */
-    public function __construct(array $data)
+    public function __construct(Collection $data)
     {
 
-        $this->ip = data_get($data, 'ip', $this->getUnknown());
-        $this->isoCode = data_get($data, 'iso_code', $this->getUnknown());
-        $this->country = data_get($data, 'country', $this->getUnknown());
-        $this->city = data_get($data, 'city', $this->getUnknown());
-        $this->latitude = data_get($data, 'latitude', $this->getUnknown());
-        $this->longitude = data_get($data, 'longitude', $this->getUnknown());
-        $this->timezone = data_get($data, 'timezone', $this->getUnknown());
+        $this->isoCode = data_get($data, 'countryCode');
+        $this->country = data_get($data, 'country');
+        $this->city = data_get($data, 'city');
+        $this->latitude = data_get($data, 'lat');
+        $this->longitude = data_get($data, 'lon');
+        $this->timezone = data_get($data, 'timezone');
     }
 
     /**
      * Make a new location.
      */
-    public static function make(array $data): self
+    public static function make(Collection $data): self
     {
 
         return app(self::class, ['data' => $data]);
@@ -51,14 +50,5 @@ final readonly class Location
     {
 
         return "{$this->city}, {$this->country}";
-    }
-
-    /**
-     * Get the unknown value.
-     */
-    private function getUnknown(): string
-    {
-
-        return __('Unknown');
     }
 }
