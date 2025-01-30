@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Akira\LaravelAuthLogs\Actions;
 
 use Akira\LaravelAuthLogs\AuthenticationLog;
-use Akira\LaravelAuthLogs\Concerns\InteractWithLogs;
+use Akira\LaravelAuthLogs\Concerns\InteractsWithLogs;
 use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
 use Illuminate\Contracts\Auth\Authenticatable;
 use RuntimeException;
 
 final readonly class SendNotification
 {
-    use InteractWithLogs;
+    use InteractsWithLogs;
 
     /**
      * Send notification to the user.

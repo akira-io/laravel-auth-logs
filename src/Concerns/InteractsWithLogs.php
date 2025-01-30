@@ -7,7 +7,7 @@ namespace Akira\LaravelAuthLogs\Concerns;
 use Akira\LaravelAuthLogs\Actions\GetLocation;
 use Akira\LaravelAuthLogs\ValueObjects\Location;
 
-trait InteractWithLogs
+trait InteractsWithLogs
 {
     /**
      *  Get the login date.

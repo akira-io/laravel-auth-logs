@@ -6,9 +6,10 @@ namespace Akira\LaravelAuthLogs;
 
 use Akira\LaravelAuthLogs\Commands\AuthLogsInstallCommand;
 use Akira\LaravelAuthLogs\Listeners\FailedLoginListener;
+use Akira\LaravelAuthLogs\Listeners\LoginListener;
 use Akira\LaravelAuthLogs\Listeners\LogoutListener;
 use Akira\LaravelAuthLogs\Listeners\OtherDeviceLogoutListener;
-use Akira\LaravelAuthLogs\Templates\FailedLogin;
+use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Events\OtherDeviceLogout;
@@ -57,7 +58,7 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
 
         $event->listen(
             events  : type(config('auth-logs.events.login', Login::class))->asString(),
-            listener: type(config('auth-logs.events.login', Login::class))->asString(),
+            listener: type(config('auth-logs.events.login', LoginListener::class))->asString(),
         );
     }
 
@@ -71,7 +72,7 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
 
         $event->listen(
 
-            events  : type(config('auth-logs.events.failed', FailedLogin::class))->asString(),
+            events  : type(config('auth-logs.events.failed', Failed::class))->asString(),
             listener: type(config('auth-logs.listeners.failed', FailedLoginListener::class))->asString(),
         );
     }
