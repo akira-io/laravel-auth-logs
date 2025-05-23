@@ -34,6 +34,7 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
             ->name('laravel-auth-logs')
             ->hasConfigFile()
             ->hasViews()
+            ->hasTranslations()
             ->hasMigration('create_laravel_auth_logs_table')
             ->hasCommand(AuthLogsInstallCommand::class);
 
