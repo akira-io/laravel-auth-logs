@@ -1,0 +1,16 @@
+{
+  "New device login": "Novo início de sessão a partir de um novo dispositivo",
+  "Hello!": "Olá!",
+  "A new device has logged into your account.": "Foi detetado um início de sessão na sua conta a partir de um novo dispositivo.",
+  "If this was you, you can safely ignore this email.": "Se foi você, pode ignorar este email com segurança.",
+  "If you suspect that someone else tried to access your account, please contact us immediately.": "Se suspeita que alguém tentou aceder à sua conta, por favor contacte-nos de imediato.",
+  "Login details:": "Detalhes do início de sessão:",
+  "Account: :account": "Conta: :account",
+  "Date: :date": "Data: :date",
+  "IP address: :ip": "Endereço IP: :ip",
+  "User agent: :user_agent": "User agent: :user_agent",
+  "Location: :location": "Localização: :location",
+  "Thank you for using our application!": "Obrigado por utilizar a nossa aplicação!",
+  "Failed login attempt": "Tentativa de início de sessão falhada",
+  "We detected a failed login attempt on your account.": "Detetámos uma tentativa de início de sessão falhada na sua conta."
+}
