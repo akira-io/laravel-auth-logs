@@ -57,14 +57,14 @@
     "test:lint": "pint --test",
     "test:refactor": "rector --dry-run",
     "test:types": "phpstan analyse ",
-    "test:type-coverage": "pest --type-coverage --min=100",
-    "test:unit": "pest --parallel --coverage --exactly=19.3",
+    "test:type-coverage": "pest --type-coverage --min=100 --compact",
+    "test:coverage": "pest --parallel --coverage --exactly=19.7 --compact",
     "test": [
       "@test:lint",
       "@test:refactor",
       "@test:types",
       "@test:type-coverage",
-      "@test:unit"
+      "@test:coverage"
     ]
   },
   "config": {
