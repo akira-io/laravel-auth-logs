@@ -58,7 +58,7 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
 
         $event->listen(
             events  : config('auth-logs.events.login', Login::class),
-            listener: config('auth-logs.events.login', LoginListener::class),
+            listener: config('auth-logs.listeners.login', LoginListener::class),
         );
     }
 
