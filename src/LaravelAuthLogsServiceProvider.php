@@ -57,8 +57,8 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
     {
 
         $event->listen(
-            events  : type(config('auth-logs.events.login', Login::class))->asString(),
-            listener: type(config('auth-logs.events.login', LoginListener::class))->asString(),
+            events  : config('auth-logs.events.login', Login::class),
+            listener: config('auth-logs.events.login', LoginListener::class),
         );
     }
 
@@ -71,9 +71,8 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
     {
 
         $event->listen(
-
-            events  : type(config('auth-logs.events.failed', Failed::class))->asString(),
-            listener: type(config('auth-logs.listeners.failed', FailedLoginListener::class))->asString(),
+            events  : config('auth-logs.events.failed', Failed::class),
+            listener: config('auth-logs.listeners.failed', FailedLoginListener::class),
         );
     }
 
@@ -86,8 +85,8 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
     {
 
         $event->listen(
-            events  : type(config('auth-logs.events.logout', Logout::class))->asString(),
-            listener: type(config('auth-logs.listeners.logout', LogoutListener::class))->asString(),
+            events  : config('auth-logs.events.logout', Logout::class),
+            listener: config('auth-logs.listeners.logout', LogoutListener::class),
         );
     }
 
@@ -101,8 +100,8 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
     {
 
         $event->listen(
-            events  : type(config('auth-logs.events.logout', OtherDeviceLogout::class))->asString(),
-            listener: type(config('auth-logs.listeners.logout', OtherDeviceLogoutListener::class))->asString(),
+            events  : config('auth-logs.events.logout', OtherDeviceLogout::class),
+            listener: config('auth-logs.listeners.logout', OtherDeviceLogoutListener::class),
         );
     }
 }
