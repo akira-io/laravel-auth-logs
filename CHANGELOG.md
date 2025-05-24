@@ -1,3 +1,23 @@
 # Changelog
 
+# 1.0.0 (2025-05-24)
+
+
+### Bug Fixes
+
+* correct listener configuration for login event in AuthLogsServiceProvider ([858b69f](https://github.com/akira-io/laravel-auth-logs/commit/858b69f77d33434488e281b31d02455a87a860d9))
+* simplify event listener configuration by removing type casting ([639719c](https://github.com/akira-io/laravel-auth-logs/commit/639719c600bb2d7cac651cb3f4bde9602ed96b7a))
+* update event listeners and rename traits for consistency ([4d6b04b](https://github.com/akira-io/laravel-auth-logs/commit/4d6b04b891797d8bfa6522cf8e802adf6a523cc0))
+* update test commands for improved coverage reporting ([34db507](https://github.com/akira-io/laravel-auth-logs/commit/34db507e8e65ce55a4809ca9357ac92371593a37))
+
+
+### Features
+
+* add authentication logs system with notifications and templates ([5eb74f6](https://github.com/akira-io/laravel-auth-logs/commit/5eb74f6c9a4350f4ed9cc9fd20988d0a9cb610da))
+* add configurable options to auth-logs.php ([ff35b16](https://github.com/akira-io/laravel-auth-logs/commit/ff35b16197c7df0243e7ada69de813ff9ba6018a))
+* add configurable options to auth-logs.php ([2c878b4](https://github.com/akira-io/laravel-auth-logs/commit/2c878b4ea4e76712fd619964587f0a8d7fdce38d))
+* add PHPStan baseline configuration and update CI workflow ([f75626c](https://github.com/akira-io/laravel-auth-logs/commit/f75626c7962af693ad915fbd3d12f54422a4bbe0))
+* add Portuguese translations for new device login notifications ([edf3ea0](https://github.com/akira-io/laravel-auth-logs/commit/edf3ea0d48552e94012edd9a254579687c9f6e1b))
+* add translation support to LaravelAuthLogsServiceProvider ([668fe02](https://github.com/akira-io/laravel-auth-logs/commit/668fe02d65ee65359a3d3dc30c21183739884749))
+
 All notable changes to `laravel-auth-logs` will be documented in this file.
