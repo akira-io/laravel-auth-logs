@@ -34,7 +34,7 @@ final readonly class NewDevice implements ToMail
             ->line(__('Login details:'))
             /** @phpstan-ignore-next-line */
             ->line(__('Account: :account', ['account' => $notifiable->email]))
-            ->line(__('Date: :date', ['date' => $this->loginAt]))
+            ->line(__('Date: :date (UTC+0)', ['date' => $this->loginAt]))
             ->line(__('IP address: :ip', ['ip' => $this->ipAddress]))
             ->line(__('User agent: :user_agent', ['user_agent' => $this->userAgent]))
             ->line(__('Location: :location', ['location' => $this->location]))

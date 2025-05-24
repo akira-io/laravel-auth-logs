@@ -33,7 +33,7 @@ final readonly class FailedLogin implements ToMail
             ->line(__('If you suspect that someone else tried to access your account, please contact us immediately.'))
             ->line(__('Login details:'))
             ->line(__('Account: :account', ['account' => $notifiable->email])) // @phpstan-ignore-line
-            ->line(__('Date: :date', ['date' => $this->loginAt]))
+            ->line(__('Date: :date (UTC+0)', ['date' => $this->loginAt]))
             ->line(__('IP address: :ip', ['ip' => $this->ipAddress]))
             ->line(__('User agent: :user_agent', ['user_agent' => $this->userAgent]))
             ->line(__('Location: :location', ['location' => $this->location]))
