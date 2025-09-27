@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/akira-io/laravel-auth-logs/compare/1.0.0...1.0.1) (2025-09-27)
+
+
+### Bug Fixes
+
+* include UTC offset in login date notifications ([a1067e9](https://github.com/akira-io/laravel-auth-logs/commit/a1067e95b29cd7807452b3264586c71905dd4c87))
+* update test coverage percentage and change minimum stability to stable ([f55a5cf](https://github.com/akira-io/laravel-auth-logs/commit/f55a5cfbc220baa8c0be2d61ececb4f1f3424a69))
+
 # 1.0.0 (2025-05-24)
 
 
