@@ -17,7 +17,11 @@ final class FailedLoginListener
     public function handle(Failed $event): void
     {
 
-        $user = type($event->user)->not()->null();
+        $user = $event->user;
+
+        if (! $user) {
+            return;
+        }
 
         $template = config('auth-logs.templates.failed_login.template', FailedLogin::class);
 
