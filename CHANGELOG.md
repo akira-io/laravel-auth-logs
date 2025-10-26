@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/akira-io/laravel-auth-logs/compare/1.0.1...1.0.2) (2025-10-26)
+
+
+### Bug Fixes
+
+* add index to authenticatable morphs in auth logs table ([ee9c284](https://github.com/akira-io/laravel-auth-logs/commit/ee9c284b3c450213f9894b6a0ba07f0130069801))
+
 ## [1.0.1](https://github.com/akira-io/laravel-auth-logs/compare/1.0.0...1.0.1) (2025-09-27)
 
 
