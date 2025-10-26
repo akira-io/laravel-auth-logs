@@ -52,7 +52,11 @@ To use the package all you need to do is add the `AuthLogs` trait to your `User`
 
 ## Documentation
 
-You'll find installation instructions and full documentation on [Auth Logs website](https://authlogs.akira-io.com).
+Full documentation is available in this repository under `docs/`:
+
+- Quick start: docs/README.md
+- Installation: docs/installation.md
+- Usage: docs/usage.md
 
 ## Testing
 
