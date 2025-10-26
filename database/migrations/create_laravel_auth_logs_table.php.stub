@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create( config('auth-logs.table_name'), function (Blueprint $table) {
             $table->id();
-            $table->morphs('authenticatable');
+            $table->morphs('authenticatable', 'auth_logs_authenticatable_index');
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->timestamp('login_at')->nullable();
