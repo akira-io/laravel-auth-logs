@@ -1,6 +1,6 @@
 {
   "name": "akira/laravel-auth-logs",
-  "description": "This is my package laravel-auth-logs",
+  "description": "Track, query, and act on authentication activity in your Laravel application. Automatically records successful and failed sign-ins, with optional notifications and geolocation context.",
   "keywords": [
     "Akira",
     "laravel",
@@ -22,6 +22,7 @@
     "spatie/laravel-package-tools": "^1.92.4"
   },
   "require-dev": {
+    "akira/laravel-debugger": "^1.0",
     "larastan/larastan": "^3.4",
     "laravel/pint": "^1.22",
     "nunomaduro/collision": "^8.8.0",
@@ -33,8 +34,7 @@
     "phpstan/extension-installer": "^1.4.3",
     "phpstan/phpstan-deprecation-rules": "^2.0.2",
     "phpstan/phpstan-phpunit": "^2.0.6",
-    "rector/rector": "^2.0.14",
-    "spatie/laravel-ray": "^1.40.2"
+    "rector/rector": "^2.0.14"
   },
   "autoload": {
     "psr-4": {
