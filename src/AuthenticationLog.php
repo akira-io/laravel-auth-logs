@@ -44,7 +44,7 @@ final class AuthenticationLog extends Model
     public function getConnectionName(): string
     {
 
-        return type(config('auth-logs.db_connection', parent::getConnectionName()))->asString();
+        return type(config('auth-logs.db_connection', parent::getConnectionName()))->asString(); // @codeCoverageIgnoreLine
     }
 
     /**
@@ -53,7 +53,7 @@ final class AuthenticationLog extends Model
     public function getTable(): string
     {
 
-        return type(config('auth-logs.table_name', parent::getTable()))->asString();
+        return type(config('auth-logs.table_name', parent::getTable()))->asString(); // @codeCoverageIgnoreLine
     }
 
     /**

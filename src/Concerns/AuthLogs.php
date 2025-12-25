@@ -44,7 +44,7 @@ trait AuthLogs
     public function lastLoginAt()
     {
 
-        return $this->authentications()
+        return $this->authenticationLogs()
             ->first()?->login_at;
     }
 
@@ -54,7 +54,7 @@ trait AuthLogs
     public function lastSuccessfulLoginAt()
     {
 
-        return $this->authentications()
+        return $this->authenticationLogs()
             ->whereLoginSuccessful(true)
             ->first()?->login_at;
     }
@@ -65,7 +65,7 @@ trait AuthLogs
     public function lastLoginIp()
     {
 
-        return $this->authentications()
+        return $this->authenticationLogs()
             ->first()
             ?->ip_address;
     }
@@ -76,7 +76,7 @@ trait AuthLogs
     public function lastSuccessfulLoginIp()
     {
 
-        return $this->authentications()->whereLoginSuccessful(true)
+        return $this->authenticationLogs()->whereLoginSuccessful(true)
             ->first()
             ?->ip_address;
     }
@@ -87,7 +87,7 @@ trait AuthLogs
     public function previousLoginAt()
     {
 
-        return $this->authentications()
+        return $this->authenticationLogs()
             ->skip(1)
             ->first()
             ?->login_at;
@@ -99,7 +99,7 @@ trait AuthLogs
     public function previousLoginIp()
     {
 
-        return $this->authentications()
+        return $this->authenticationLogs()
             ->skip(1)
             ->first()
             ?->ip_address;
