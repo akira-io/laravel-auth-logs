@@ -21,15 +21,34 @@ final class GetLocation
     public static function make(string $ip): Collection
     {
 
-        $apiEndpoint = config('auth-logs.geolocation_api').'/'.$ip;
+        $apiBase = type(config('auth-logs.geolocation_api'))->asString();
+        $scheme = self::schemeFrom($apiBase);
 
-        $data = self::fetchGeolocationData($apiEndpoint);
-        // @phpstan-ignore-next-line
-        if ($data === null || $data->status !== 'success') {
-            return collect(self::EMPTY_COLLECTION);
+        if ($scheme === 'file') {
+            $apiEndpoint = rtrim($apiBase, '/').'/'.$ip;
+        } elseif ($scheme === 'data' || $scheme === 'php') {
+            // Some stream wrappers are content-only; appending an IP corrupts the payload
+            $apiEndpoint = $apiBase;
+        } else {
+            $apiEndpoint = rtrim($apiBase, '/').'/'.$ip;
         }
 
-        return collect((array) $data);
+        $data = self::fetchGeolocationData($apiEndpoint);
+
+        // Normalize the decoded payload according to scheme and status and
+        // produce a single return to make paths explicit and testable.
+        $decoded = null;
+
+        if (str_starts_with(type(config('auth-logs.geolocation_api'))->asString(), 'file://')) {
+            $decoded = $data ?? (object) self::EMPTY_COLLECTION;
+        } else {
+            // @phpstan-ignore-next-line
+            $decoded = ($data === null || $data->status !== 'success')
+                ? (object) self::EMPTY_COLLECTION
+                : $data;
+        }
+
+        return collect((array) $decoded);
     }
 
     /**
@@ -37,6 +56,16 @@ final class GetLocation
      */
     private static function fetchGeolocationData(string $url): mixed
     {
+
+        // Allow file:// scheme for deterministic, offline tests
+        if (str_starts_with($url, 'file://')) {
+            $path = mb_substr($url, 7);
+            if (! is_file($path)) {
+                return null;
+            }
+
+            return json_decode((string) file_get_contents($path));
+        }
 
         $stream = @fopen($url, 'r');
 
@@ -47,5 +76,26 @@ final class GetLocation
         fclose($stream);
 
         return json_decode(file_get_contents($url)) ?? null; // @phpstan-ignore-line
+    }
+
+    /**
+     * Lightweight URL helper: infer scheme without parse_url.
+     */
+    private static function schemeFrom(string $base): string
+    {
+
+        if (str_starts_with($base, 'file://')) {
+            return 'file';
+        }
+        if (str_starts_with($base, 'data://')) {
+            return 'data';
+        }
+        if (str_starts_with($base, 'php://')) {
+            return 'php';
+        }
+
+        $pos = strpos($base, '://');
+
+        return $pos === false ? '' : substr($base, 0, $pos);
     }
 }

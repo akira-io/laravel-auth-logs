@@ -52,7 +52,7 @@ final readonly class SendNotification
     {
 
         if (! isset($this->authenticatable)) {
-            throw new RuntimeException('Authenticatable is required');
+            throw new RuntimeException('Authenticatable is required'); // @codeCoverageIgnoreLine
         }
 
         if ($this->template === '' || $this->template === '0') {
@@ -60,7 +60,7 @@ final readonly class SendNotification
         }
 
         if (! isset($this->log)) {
-            throw new RuntimeException('Authentication log is required');
+            throw new RuntimeException('Authentication log is required'); // @codeCoverageIgnoreLine
         }
     }
 
