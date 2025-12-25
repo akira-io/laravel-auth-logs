@@ -9,16 +9,16 @@ return RectorConfig::configure()
     ->withPaths([
         __DIR__.'/src',
         __DIR__.'/tests',
+        __DIR__.'/database',
     ])
     ->withSkip([
         AddOverrideAttributeToOverriddenMethodsRector::class,
     ])
     ->withPreparedSets(
-        deadCode: true,
-        codeQuality: true,
+        deadCode        : true,
+        codeQuality     : true,
         typeDeclarations: true,
-        privatization: true,
-        earlyReturn: true,
-        strictBooleans: true,
+        privatization   : true,
+        earlyReturn     : true,
     )
     ->withPhpSets();
