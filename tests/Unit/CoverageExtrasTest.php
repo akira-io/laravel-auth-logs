@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Akira\LaravelAuthLogs\Actions\GetLocation;
+use Akira\LaravelAuthLogs\Actions\CreateAuthenticationLog;
+use Akira\LaravelAuthLogs\Actions\SendNotification;
 use Akira\LaravelAuthLogs\AuthenticationLog;
 use Akira\LaravelAuthLogs\Facades\LaravelAuthLogs;
 use Akira\LaravelAuthLogs\Listeners\FailedLoginListener;
@@ -115,4 +117,26 @@ it('data scheme with success status covers non-file success branch', function ()
 
     $collection = GetLocation::make('ignored');
     expect($collection->isEmpty())->toBeFalse();
+});
+
+it('interacts trait returns Unknown when location cannot be resolved', function (): void {
+    config()->set('auth-logs.db_connection', 'testing');
+    // Force empty geolocation result
+    config()->set('auth-logs.geolocation_api', 'php://temp');
+
+    $user = \Akira\LaravelAuthLogs\Tests\Fixtures\User::create([
+        'email' => 'unknown@example.test',
+        'created_at' => now()->subMinutes(10),
+        'updated_at' => now()->subMinutes(10),
+    ]);
+
+    request()->server->set('REMOTE_ADDR', '9.9.9.9');
+    request()->headers->set('User-Agent', 'UA/X');
+    request()->merge(['location' => []]);
+
+    $log = CreateAuthenticationLog::for($user, true);
+
+    $sender = SendNotification::make($user, \Akira\LaravelAuthLogs\Templates\NewDevice::class, $log);
+
+    expect($sender->getFullLocation())->toBe(__('Unknown'));
 });
