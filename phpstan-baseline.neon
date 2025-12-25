@@ -1,49 +1,36 @@
 parameters:
-	ignoreErrors:
-		-
-			message: '#^Binary operation "\." between mixed and ''/'' results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/Actions/GetLocation.php
+  ignoreErrors:
+    - message: '#^Parameter \$template of class Akira\\LaravelAuthLogs\\Notifications\\AuthLogsNotification constructor expects Akira\\LaravelAuthLogs\\Contracts\\Template, mixed given\.$#'
+      identifier: argument.type
+      count: 1
+      path: src/Actions/SendNotification.php
 
-		-
-			message: '#^Parameter \$template of class Akira\\LaravelAuthLogs\\Notifications\\AuthLogsNotification constructor expects Akira\\LaravelAuthLogs\\Contracts\\Template, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Actions/SendNotification.php
+    - message: '#^Property Akira\\LaravelAuthLogs\\Actions\\SendNotification\:\:\$authenticatable in isset\(\) is not nullable nor uninitialized\.$#'
+      identifier: isset.initializedProperty
+      count: 1
+      path: src/Actions/SendNotification.php
 
-		-
-			message: '#^Property Akira\\LaravelAuthLogs\\Actions\\SendNotification\:\:\$authenticatable in isset\(\) is not nullable nor uninitialized\.$#'
-			identifier: isset.initializedProperty
-			count: 1
-			path: src/Actions/SendNotification.php
+    - message: '#^Property Akira\\LaravelAuthLogs\\Actions\\SendNotification\:\:\$log in isset\(\) is not nullable nor uninitialized\.$#'
+      identifier: isset.initializedProperty
+      count: 1
+      path: src/Actions/SendNotification.php
 
-		-
-			message: '#^Property Akira\\LaravelAuthLogs\\Actions\\SendNotification\:\:\$log in isset\(\) is not nullable nor uninitialized\.$#'
-			identifier: isset.initializedProperty
-			count: 1
-			path: src/Actions/SendNotification.php
+    - message: '#^Class Akira\\LaravelAuthLogs\\AuthenticationLog has PHPDoc tag @property for property \$location with no value type specified in iterable type array\.$#'
+      identifier: missingType.iterableValue
+      count: 1
+      path: src/AuthenticationLog.php
 
-		-
-			message: '#^Class Akira\\LaravelAuthLogs\\AuthenticationLog has PHPDoc tag @property for property \$location with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/AuthenticationLog.php
+    - message: '#^Trait Akira\\LaravelAuthLogs\\Concerns\\AuthLogs is used zero times and is not analysed\.$#'
+      identifier: trait.unused
+      count: 1
+      path: src/Concerns/AuthLogs.php
 
-		-
-			message: '#^Trait Akira\\LaravelAuthLogs\\Concerns\\AuthLogs is used zero times and is not analysed\.$#'
-			identifier: trait.unused
-			count: 1
-			path: src/Concerns/AuthLogs.php
+    - message: '#^Parameter \$events of method Illuminate\\Contracts\\Events\\Dispatcher\:\:listen\(\) expects array\|Closure\|string, mixed given\.$#'
+      identifier: argument.type
+      count: 4
+      path: src/LaravelAuthLogsServiceProvider.php
 
-		-
-			message: '#^Parameter \$events of method Illuminate\\Contracts\\Events\\Dispatcher\:\:listen\(\) expects array\|Closure\|string, mixed given\.$#'
-			identifier: argument.type
-			count: 4
-			path: src/LaravelAuthLogsServiceProvider.php
-
-		-
-			message: '#^Parameter \$listener of method Illuminate\\Contracts\\Events\\Dispatcher\:\:listen\(\) expects array\|Closure\|string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 4
-			path: src/LaravelAuthLogsServiceProvider.php
+    - message: '#^Parameter \$listener of method Illuminate\\Contracts\\Events\\Dispatcher\:\:listen\(\) expects array\|Closure\|string\|null, mixed given\.$#'
+      identifier: argument.type
+      count: 4
+      path: src/LaravelAuthLogsServiceProvider.php
