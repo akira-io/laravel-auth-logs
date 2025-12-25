@@ -25,12 +25,12 @@ final class GetLocation
         $scheme = self::schemeFrom($apiBase);
 
         if ($scheme === 'file') {
-            $apiEndpoint = rtrim($apiBase, '/').'/'.$ip;
+            $apiEndpoint = mb_rtrim($apiBase, '/').'/'.$ip;
         } elseif ($scheme === 'data' || $scheme === 'php') {
             // Some stream wrappers are content-only; appending an IP corrupts the payload
             $apiEndpoint = $apiBase;
         } else {
-            $apiEndpoint = rtrim($apiBase, '/').'/'.$ip;
+            $apiEndpoint = mb_rtrim($apiBase, '/').'/'.$ip;
         }
 
         $data = self::fetchGeolocationData($apiEndpoint);
@@ -94,8 +94,8 @@ final class GetLocation
             return 'php';
         }
 
-        $pos = strpos($base, '://');
+        $pos = mb_strpos($base, '://');
 
-        return $pos === false ? '' : substr($base, 0, $pos);
+        return $pos === false ? '' : mb_substr($base, 0, $pos);
     }
 }
