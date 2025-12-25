@@ -5,10 +5,12 @@ declare(strict_types=1);
 use Akira\LaravelAuthLogs\Actions\GetLocation;
 use Akira\LaravelAuthLogs\AuthenticationLog;
 use Akira\LaravelAuthLogs\Facades\LaravelAuthLogs;
+use Akira\LaravelAuthLogs\Listeners\FailedLoginListener;
 use Akira\LaravelAuthLogs\Listeners\LogoutListener;
 use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
 use Akira\LaravelAuthLogs\Templates\NewDevice;
 use Akira\LaravelAuthLogs\Tests\Fixtures\User;
+use Illuminate\Auth\Events\Failed;
 
 it('facade accessor returns underlying class', function (): void {
 
@@ -38,7 +40,8 @@ it('notification channels and toMail are returned', function (): void {
 it('authentication log morph relation resolves authenticatable', function (): void {
 
     config()->set('auth-logs.db_connection', 'testing');
-    $user = User::create(['email' => 'morph@example.test', 'created_at' => now()->subMinutes(10),
+    $user = User::create([
+        'email' => 'morph@example.test', 'created_at' => now()->subMinutes(10),
         'updated_at' => now()->subMinutes(10),
     ]);
     request()->server->set('REMOTE_ADDR', '8.8.8.8');
@@ -72,6 +75,7 @@ it('non-file geolocation path covers non-file branch', function (): void {
 });
 
 it('non-file geolocation with failing status covers conditional', function (): void {
+
     // data:// stream returns a valid JSON with status != success
     $payload = base64_encode(json_encode(['status' => 'fail', 'message' => 'bad']));
     config()->set('auth-logs.geolocation_api', 'data://text/plain;base64,'.$payload);
@@ -81,13 +85,15 @@ it('non-file geolocation with failing status covers conditional', function (): v
 });
 
 it('non-file geolocation with success status covers success branch', function (): void {
-    $dir = realpath(__DIR__.'/../fixtures');
+
+    $dir = realpath(__DIR__.'/../Fixtures') ?: realpath(__DIR__.'/../fixtures');
     config()->set('auth-logs.geolocation_api', 'file://'.$dir);
     $collection = GetLocation::make('1.1.1.1');
     expect($collection->isEmpty())->toBeFalse();
 });
 
 it('http-like scheme covers else apiEndpoint path', function (): void {
+
     // Use an unsupported wrapper to avoid network while hitting the else branch
     config()->set('auth-logs.geolocation_api', 'gopher://nowhere');
     $collection = GetLocation::make('1.2.3.4');
@@ -95,16 +101,18 @@ it('http-like scheme covers else apiEndpoint path', function (): void {
 });
 
 it('failed login listener ignores null user', function (): void {
-    $listener = new \Akira\LaravelAuthLogs\Listeners\FailedLoginListener();
-    $event = new \Illuminate\Auth\Events\Failed('web', null, []);
+
+    $listener = new FailedLoginListener();
+    $event = new Failed('web', null, []);
     $listener->handle($event);
     expect(true)->toBeTrue();
 });
 
 it('data scheme with success status covers non-file success branch', function (): void {
+
     $payload = base64_encode(json_encode(['status' => 'success', 'country' => 'X', 'city' => 'Y']));
     config()->set('auth-logs.geolocation_api', 'data://text/plain;base64,'.$payload);
 
-    $collection = \Akira\LaravelAuthLogs\Actions\GetLocation::make('ignored');
+    $collection = GetLocation::make('ignored');
     expect($collection->isEmpty())->toBeFalse();
 });

@@ -57,8 +57,8 @@ it('detects known device for user', function (): void {
 
 it('gets location data from local fixture and builds notification', function (): void {
     config()->set('auth-logs.db_connection', 'testing');
-    // Point geolocation to local fixture via file:// URL
-    $fixtures = realpath(__DIR__.'/../fixtures');
+    // Point geolocation to local fixture via file:// URL (case-safe)
+    $fixtures = realpath(__DIR__.'/../Fixtures') ?: realpath(__DIR__.'/../fixtures');
     config()->set('auth-logs.geolocation_api', 'file://'.$fixtures);
 
     Notification::fake();
