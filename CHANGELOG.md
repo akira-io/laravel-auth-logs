@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.3](https://github.com/akira-io/laravel-auth-logs/compare/1.0.2...1.0.3) (2025-12-25)
+
+
+### Bug Fixes
+
+* add database path to rector configuration and align parameter formatting ([c9cc646](https://github.com/akira-io/laravel-auth-logs/commit/c9cc64605344a2a02f775dae6092c2d3b42eab68))
+* enhance geolocation API handling and support file scheme for offline tests ([d8f5282](https://github.com/akira-io/laravel-auth-logs/commit/d8f528274cb5434c74354b8d2580ebfb1699aca5))
+* improve string handling in GetLocation for better compatibility ([b782dc9](https://github.com/akira-io/laravel-auth-logs/commit/b782dc912d91b629acae2c3ddeda02ddf0e31a35))
+* update authentication methods to use authenticationLogs for consistency ([96dea60](https://github.com/akira-io/laravel-auth-logs/commit/96dea607ccf4470bc1fae15f863918ccceae4e16))
+* update phpstan baseline and enhance test case setup with in-memory database and authentication logs table ([6f7362a](https://github.com/akira-io/laravel-auth-logs/commit/6f7362a6cdcebe62ed10b2cd32e82d62fac00522))
+
 ## [1.0.2](https://github.com/akira-io/laravel-auth-logs/compare/1.0.1...1.0.2) (2025-10-26)
 
 
