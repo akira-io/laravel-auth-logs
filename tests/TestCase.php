@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\LaravelAuthLogs\Tests;
 
+use Akira\Debugger\DebuggerServiceProvider;
 use Akira\LaravelAuthLogs\LaravelAuthLogsServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Schema\Blueprint;
@@ -64,6 +65,7 @@ abstract class TestCase extends Orchestra
 
         return [
             LaravelAuthLogsServiceProvider::class,
+            DebuggerServiceProvider::class,
         ];
     }
 }
