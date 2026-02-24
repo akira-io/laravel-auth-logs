@@ -35,14 +35,8 @@ jobs:
           coverage: xdebug
           tools: composer:v2
 
-      - name: Set Laravel version
-        run: composer require "illuminate/contracts:${{ matrix.laravel }}" --no-update
-
       - name: Install dependencies
-        run: |
-          composer config minimum-stability dev
-          composer config prefer-stable true
-          composer update --prefer-dist --no-progress --no-interaction --with-all-dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Run tests (Pest)
         run: composer test
