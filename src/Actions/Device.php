@@ -6,6 +6,8 @@ namespace Akira\LaravelAuthLogs\Actions;
 
 use Akira\LaravelAuthLogs\AuthenticationLog;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 final class Device
 {
@@ -15,7 +17,11 @@ final class Device
     public static function isKnownFor(Authenticatable $user, ?string $ip, ?string $userAgent): ?AuthenticationLog
     {
 
-        return $user->authenticationLogs()->whereIpAddress($ip) // @phpstan-ignore-line
+        /** @var MorphMany<AuthenticationLog, Model> $logs */
+        $logs = $user->authenticationLogs(); // @phpstan-ignore-line
+
+        return $logs
+            ->whereIpAddress($ip)
             ->whereUserAgent($userAgent)
             ->whereLoginSuccessful(true)
             ->first();

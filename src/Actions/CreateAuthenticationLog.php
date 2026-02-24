@@ -6,6 +6,8 @@ namespace Akira\LaravelAuthLogs\Actions;
 
 use Akira\LaravelAuthLogs\AuthenticationLog;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 final class CreateAuthenticationLog
 {
@@ -15,13 +17,15 @@ final class CreateAuthenticationLog
     public static function for(Authenticatable $authenticatable, bool $isSuccessFull = false): AuthenticationLog
     {
 
-        return $authenticatable->authenticationLogs() // @phpstan-ignore-line
-            ->create([
-                'login_at' => now(),
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-                'location' => request()->location,
-                'login_successful' => $isSuccessFull,
-            ]);
+        /** @var MorphMany<AuthenticationLog, Model> $logs */
+        $logs = $authenticatable->authenticationLogs(); // @phpstan-ignore-line
+
+        return $logs->create([
+            'login_at' => now(),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'location' => request()->location,
+            'login_successful' => $isSuccessFull,
+        ]);
     }
 }
