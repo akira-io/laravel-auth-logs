@@ -1,5 +1,17 @@
 # Changelog
 
+# [1.1.0](https://github.com/akira-io/laravel-auth-logs/compare/1.0.3...1.1.0) (2026-02-25)
+
+
+### Bug Fixes
+
+* correct fixture path and update test coverage threshold to 100% ([df14056](https://github.com/akira-io/laravel-auth-logs/commit/df1405607ac07778887e8ddafb9098afaeb87acd))
+
+
+### Features
+
+* add Laravel 13 support ([1a54f93](https://github.com/akira-io/laravel-auth-logs/commit/1a54f9397eabe17b1026b9dc0af1de8b00655598))
+
 ## [1.0.3](https://github.com/akira-io/laravel-auth-logs/compare/1.0.2...1.0.3) (2025-12-25)
 
 
