@@ -5,8 +5,7 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/akira/laravel-auth-logs.svg)](https://packagist.org/packages/akira/laravel-auth-logs)
 [![PHPStan Level](https://img.shields.io/badge/phpstan-level%209-brightgreen.svg)](https://phpstan.org)
 [![License](https://img.shields.io/packagist/l/akira/laravel-auth-logs.svg)](https://github.com/akira-io/laravel-auth-logs/blob/main/LICENSE)
-
-![logo.png](logo.png)
+![img.png](img.png)
 
 </div>
 This package logs all authentication events in your Laravel application. It logs the following events:
