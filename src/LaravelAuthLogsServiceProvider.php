@@ -92,17 +92,14 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
     }
 
     /**
-     * Subscribe to the "logout other devices" event to log when a user logs out
-     * from other active sessions on different devices.
-     *
-     * @param  Dispatcher  $event  The event dispatcher instance.
+     * @param  Dispatcher  $event
      */
     private function subscribeToLogoutOtherDeviceEvent(Dispatcher $event): void
     {
 
         $event->listen(
-            events  : config('auth-logs.events.logout', OtherDeviceLogout::class),
-            listener: config('auth-logs.listeners.logout', OtherDeviceLogoutListener::class),
+            events  : config('auth-logs.events.logout-other-devices', OtherDeviceLogout::class),
+            listener: config('auth-logs.listeners.other_device_logout', OtherDeviceLogoutListener::class),
         );
     }
 }

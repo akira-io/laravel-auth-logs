@@ -6,9 +6,13 @@ use Akira\LaravelAuthLogs\Actions\CreateAuthenticationLog;
 use Akira\LaravelAuthLogs\AuthenticationLog;
 use Akira\LaravelAuthLogs\Listeners\FailedLoginListener;
 use Akira\LaravelAuthLogs\Listeners\LoginListener;
+use Akira\LaravelAuthLogs\Listeners\LogoutListener;
+use Akira\LaravelAuthLogs\Listeners\OtherDeviceLogoutListener;
 use Akira\LaravelAuthLogs\Tests\Fixtures\User;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
+use Illuminate\Auth\Events\OtherDeviceLogout;
 use Illuminate\Support\Facades\Notification;
 
 it('login listener logs and conditionally notifies', function (): void {
@@ -39,5 +43,21 @@ it('failed login listener logs for user', function (): void {
     new FailedLoginListener()->handle(new Failed('web', $user, []));
 
     expect(AuthenticationLog::query()->count())->toBe(1);
+});
+
+it('logout event is registered to LogoutListener independently', function (): void {
+    $raw = app('events')->getRawListeners();
+
+    expect($raw)->toHaveKey(Logout::class)
+        ->and($raw[Logout::class])->toContain(LogoutListener::class)
+        ->and($raw[Logout::class])->not->toContain(OtherDeviceLogoutListener::class);
+});
+
+it('other device logout event is registered to OtherDeviceLogoutListener independently', function (): void {
+    $raw = app('events')->getRawListeners();
+
+    expect($raw)->toHaveKey(OtherDeviceLogout::class)
+        ->and($raw[OtherDeviceLogout::class])->toContain(OtherDeviceLogoutListener::class)
+        ->and($raw[OtherDeviceLogout::class])->not->toContain(LogoutListener::class);
 });
 
