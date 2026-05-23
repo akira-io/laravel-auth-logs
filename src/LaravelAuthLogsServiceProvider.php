@@ -92,7 +92,9 @@ final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
     }
 
     /**
-     * @param  Dispatcher  $event
+     * Subscribe to the other device logout event to log when a user revokes other active sessions.
+     *
+     * @param  Dispatcher  $event  The event dispatcher instance.
      */
     private function subscribeToLogoutOtherDeviceEvent(Dispatcher $event): void
     {
