@@ -101,7 +101,9 @@ if ($user->isNew()) {
 
 ### Register Logout
 
-Manually register a logout:
+Logout events are recorded automatically when Laravel fires the `Logout` event. No manual call is required for standard logouts.
+
+To record a logout outside of the default event flow, call `registerLogout()` directly:
 
 ```php
 $user->registerLogout();

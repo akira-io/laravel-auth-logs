@@ -13,6 +13,7 @@ use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
 use Akira\LaravelAuthLogs\Templates\NewDevice;
 use Akira\LaravelAuthLogs\Tests\Fixtures\User;
 use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Events\Logout;
 
 it('facade accessor returns underlying class', function (): void {
 
@@ -22,9 +23,12 @@ it('facade accessor returns underlying class', function (): void {
     expect($result)->toBe(Akira\LaravelAuthLogs\LaravelAuthLogs::class);
 });
 
-it('logout listener handle executes', function (): void {
+it('logout listener handle executes without a prior log entry', function (): void {
+    config()->set('auth-logs.db_connection', 'testing');
 
-    new LogoutListener()->handle();
+    $user = User::create(['email' => 'cov_lo@example.test', 'created_at' => now(), 'updated_at' => now()]);
+
+    new LogoutListener()->handle(new Logout('web', $user));
     expect(true)->toBeTrue();
 });
 
