@@ -6,6 +6,7 @@ namespace Akira\LaravelAuthLogs\Concerns;
 
 use Akira\LaravelAuthLogs\Actions\GetLocation;
 use Akira\LaravelAuthLogs\ValueObjects\Location;
+use Illuminate\Support\Collection;
 
 trait InteractsWithLogs
 {
@@ -48,13 +49,34 @@ trait InteractsWithLogs
     public function getFullLocation(): string
     {
 
-        $location = GetLocation::make($this->getIpAddress());
+        $location = $this->getStoredLocation();
+
+        if ($location->isEmpty()) {
+            $location = GetLocation::make($this->getIpAddress());
+        }
 
         if ($location->isEmpty()) {
             return __('Unknown');
         }
 
+        $this->log->update(['location' => $location->all()]);
+
         return Location::make($location)
             ->getFullLocation();
+    }
+
+    /**
+     * @return Collection<string, mixed>
+     */
+    private function getStoredLocation(): Collection
+    {
+
+        $location = collect($this->log->location ?? []);
+
+        if ($location->has('city') || $location->has('country')) {
+            return $location;
+        }
+
+        return collect();
     }
 }
