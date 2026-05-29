@@ -45,6 +45,24 @@ it('failed login listener logs for user', function (): void {
     expect(AuthenticationLog::query()->count())->toBe(1);
 });
 
+it('logout listener registers logout on the latest authentication log', function (): void {
+    config()->set('auth-logs.db_connection', 'testing');
+
+    $user = User::create(['email' => 'logout@example.test', 'created_at' => now()->subMinutes(10), 'updated_at' => now()->subMinutes(10)]);
+
+    request()->server->set('REMOTE_ADDR', '7.7.7.7');
+    request()->headers->set('User-Agent', 'UA/7');
+    request()->merge(['location' => []]);
+
+    $log = CreateAuthenticationLog::for($user, true);
+
+    new LogoutListener()->handle(new Logout('web', $user));
+
+    expect($log->fresh())
+        ->logout_at->not->toBeNull()
+        ->cleared_by_user->toBeTrue();
+});
+
 it('logout event is registered to LogoutListener independently', function (): void {
     $raw = app('events')->getRawListeners();
 
@@ -60,4 +78,3 @@ it('other device logout event is registered to OtherDeviceLogoutListener indepen
         ->and($raw[OtherDeviceLogout::class])->toContain(OtherDeviceLogoutListener::class)
         ->and($raw[OtherDeviceLogout::class])->not->toContain(LogoutListener::class);
 });
-
