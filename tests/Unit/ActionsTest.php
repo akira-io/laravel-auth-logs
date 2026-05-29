@@ -102,6 +102,14 @@ it('returns empty collection when geolocation fails', function (): void {
     expect($result->isEmpty())->toBeTrue();
 });
 
+it('returns empty collection when geolocation is disabled', function (): void {
+    config()->set('auth-logs.geolocation_api');
+
+    $result = GetLocation::make('9.9.9.9');
+
+    expect($result->isEmpty())->toBeTrue();
+});
+
 it('validates send notification properties', function (): void {
     config()->set('auth-logs.db_connection', 'testing');
     $user = User::create(['email' => 'err@example.test']);
