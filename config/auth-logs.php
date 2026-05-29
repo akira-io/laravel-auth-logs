@@ -127,8 +127,8 @@ return [
     | Log Retention Period
     |--------------------------------------------------------------------------
     |
-    | Specify the retention period for authentication logs (in days). Logs older
-    | than this period will be purged automatically to optimize database usage.
+    | Specify the retention period for authentication logs (in days). Use this
+    | value from your application's own scheduled cleanup.
     |
     */
     'purge' => 365,
