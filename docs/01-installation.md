@@ -3,7 +3,9 @@
 ## Requirements
 
 - PHP 8.4 or higher
-- Laravel 12.0 or higher
+- Laravel 12.0 or 13.0
+
+The package test workflow validates both Laravel 12 and Laravel 13 dependency sets.
 
 ## Installation Steps
 
