@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Notification;
 it('creates an authentication log via action', function (): void {
     config()->set('auth-logs.db_connection', 'testing');
 
-    // Fake the request context values
     request()->server->set('REMOTE_ADDR', '1.1.1.1');
     request()->headers->set('User-Agent', 'Agent/1.0');
     request()->merge(['location' => ['iso_code' => 'WW']]);
@@ -44,7 +43,6 @@ it('detects known device for user', function (): void {
         'updated_at' => now()->subMinutes(10),
     ]);
 
-    // Seed a successful login for the same ip/ua
     request()->server->set('REMOTE_ADDR', '2.2.2.2');
     request()->headers->set('User-Agent', 'UA/2.0');
     request()->merge(['location' => ['iso_code' => 'WW']]);
@@ -57,7 +55,6 @@ it('detects known device for user', function (): void {
 
 it('gets location data from local fixture and builds notification', function (): void {
     config()->set('auth-logs.db_connection', 'testing');
-    // Point geolocation to local fixture via file:// URL (case-safe)
     $fixtures = realpath(__DIR__.'/../Fixtures') ?: realpath(__DIR__.'/../fixtures');
     config()->set('auth-logs.geolocation_api', 'file://'.$fixtures);
 
@@ -69,21 +66,14 @@ it('gets location data from local fixture and builds notification', function ():
         'updated_at' => now()->subMinutes(10),
     ]);
 
-    // Make a log with ip that matches fixture file name
     request()->server->set('REMOTE_ADDR', '1.1.1.1');
     request()->headers->set('User-Agent', 'UA/1.0');
     request()->merge(['location' => ['status' => 'success']]);
 
-    // Ensure the location helper sees and formats the city/country correctly
-    // by priming a minimal expected shape.
-    // The InteractsWithLogs->getFullLocation() ignores request()->location and
-    // calls GetLocation::make using the configured file fixture. No change
-    // here is necessary beyond ensuring the config points at the file path.
     $log = CreateAuthenticationLog::for($user, true);
 
     $sender = SendNotification::make($user, NewDevice::class, $log);
 
-    // also hit trait helpers directly for coverage
     expect($sender->getIpAddress())->toBe('1.1.1.1')
         ->and($sender->getUserAgent())->toBe('UA/1.0')
         ->and($sender->getFullLocation())->toBe('Emerald City, Wonderland')
@@ -124,6 +114,20 @@ it('returns empty collection when geolocation fails', function (): void {
     expect($result->isEmpty())->toBeTrue();
 });
 
+it('returns empty collection when geolocation is disabled', function (): void {
+    $geolocationApi = config('auth-logs.geolocation_api');
+
+    try {
+        config(['auth-logs.geolocation_api' => null]);
+
+        $result = GetLocation::make('9.9.9.9');
+
+        expect($result->isEmpty())->toBeTrue();
+    } finally {
+        config(['auth-logs.geolocation_api' => $geolocationApi]);
+    }
+});
+
 it('validates send notification properties', function (): void {
     config()->set('auth-logs.db_connection', 'testing');
     $user = User::create(['email' => 'err@example.test']);
@@ -132,7 +136,6 @@ it('validates send notification properties', function (): void {
     request()->merge(['location' => []]);
     $log = CreateAuthenticationLog::for($user, false);
 
-    // Invalid template string should throw (template check)
     $ref = new \ReflectionClass(SendNotification::class);
     $ctor = $ref->getConstructor();
     $instance = $ref->newInstanceWithoutConstructor();
@@ -143,13 +146,11 @@ it('validates send notification properties', function (): void {
     expect(fn (): mixed => $method->invoke($instance))
         ->toThrow(RuntimeException::class);
 
-    // Missing authenticatable should throw (first guard)
     $noAuth = $ref->newInstanceWithoutConstructor();
     $sendNoAuth = new \ReflectionMethod($noAuth, 'send');
     expect(fn (): mixed => $sendNoAuth->invoke($noAuth))
         ->toThrow(RuntimeException::class);
 
-    // Missing log should throw (last guard)
     $missingLog = $ref->newInstanceWithoutConstructor();
     $pa = new \ReflectionProperty(SendNotification::class, 'authenticatable');
     $pt = new \ReflectionProperty(SendNotification::class, 'template');

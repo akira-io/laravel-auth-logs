@@ -21,7 +21,12 @@ final class GetLocation
     public static function make(string $ip): Collection
     {
 
-        $apiBase = type(config('auth-logs.geolocation_api'))->asString();
+        $apiBase = config('auth-logs.geolocation_api');
+
+        if (! is_string($apiBase) || $apiBase === '') {
+            return collect(self::EMPTY_COLLECTION);
+        }
+
         $scheme = self::schemeFrom($apiBase);
 
         if ($scheme === 'file') {
@@ -39,7 +44,7 @@ final class GetLocation
         // produce a single return to make paths explicit and testable.
         $decoded = null;
 
-        if (str_starts_with(type(config('auth-logs.geolocation_api'))->asString(), 'file://')) {
+        if (str_starts_with($apiBase, 'file://')) {
             $decoded = $data ?? (object) self::EMPTY_COLLECTION;
         } else {
             // @phpstan-ignore-next-line
