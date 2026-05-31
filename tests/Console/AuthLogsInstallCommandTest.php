@@ -32,3 +32,12 @@ test('it can run the command silently', function (): void {
     $this->artisan('auth-logs:install --silent')
         ->assertExitCode(0);
 });
+
+test('the migration stub supports rollback', function (): void {
+
+    $stub = file_get_contents(__DIR__.'/../../database/migrations/create_laravel_auth_logs_table.php.stub');
+
+    expect($stub)
+        ->toContain('public function down(): void')
+        ->toContain('Schema::dropIfExists(config(\'auth-logs.table_name\'))');
+});
