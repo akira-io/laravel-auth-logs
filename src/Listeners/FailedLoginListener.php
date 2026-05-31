@@ -29,6 +29,10 @@ final class FailedLoginListener
 
         $log = CreateAuthenticationLog::for($user);
 
+        if (! (bool) config('auth-logs.templates.failed_login.notification', true)) {
+            return;
+        }
+
         SendNotification::make(authenticatable: $user, template: $template, log: $log)->send();
     }
 }

@@ -30,6 +30,23 @@ it('login listener logs and conditionally notifies', function (): void {
     expect(AuthenticationLog::query()->count())->toBe(1);
 });
 
+it('login listener respects disabled new device notifications', function (): void {
+    config()->set('auth-logs.db_connection', 'testing');
+    config()->set('auth-logs.templates.new_device.notification', false);
+    Notification::fake();
+
+    $user = User::create(['email' => 'disabled-login@example.test', 'created_at' => now()->subMinutes(10), 'updated_at' => now()->subMinutes(10)]);
+
+    request()->server->set('REMOTE_ADDR', '5.5.5.6');
+    request()->headers->set('User-Agent', 'UA/5-disabled');
+    request()->merge(['location' => []]);
+
+    new LoginListener()->handle(new Login('web', $user, false));
+
+    expect(AuthenticationLog::query()->count())->toBe(1);
+    Notification::assertNothingSent();
+});
+
 it('failed login listener logs for user', function (): void {
     config()->set('auth-logs.db_connection', 'testing');
     Notification::fake();
@@ -43,6 +60,23 @@ it('failed login listener logs for user', function (): void {
     new FailedLoginListener()->handle(new Failed('web', $user, []));
 
     expect(AuthenticationLog::query()->count())->toBe(1);
+});
+
+it('failed login listener respects disabled notifications', function (): void {
+    config()->set('auth-logs.db_connection', 'testing');
+    config()->set('auth-logs.templates.failed_login.notification', false);
+    Notification::fake();
+
+    $user = User::create(['email' => 'disabled-failed@example.test', 'created_at' => now()->subMinutes(10), 'updated_at' => now()->subMinutes(10)]);
+
+    request()->server->set('REMOTE_ADDR', '6.6.6.7');
+    request()->headers->set('User-Agent', 'UA/6-disabled');
+    request()->merge(['location' => []]);
+
+    new FailedLoginListener()->handle(new Failed('web', $user, []));
+
+    expect(AuthenticationLog::query()->count())->toBe(1);
+    Notification::assertNothingSent();
 });
 
 it('logout listener registers logout on the latest authentication log', function (): void {
