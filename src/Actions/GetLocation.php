@@ -72,15 +72,13 @@ final class GetLocation
             return json_decode((string) file_get_contents($path));
         }
 
-        $stream = @fopen($url, 'r');
+        $contents = @file_get_contents($url, false, self::streamContext());
 
-        if (! is_resource($stream)) {
+        if ($contents === false) {
             return null;
         }
 
-        fclose($stream);
-
-        return json_decode(file_get_contents($url)) ?? null; // @phpstan-ignore-line
+        return json_decode($contents) ?? null;
     }
 
     /**
@@ -102,5 +100,17 @@ final class GetLocation
         $pos = mb_strpos($base, '://');
 
         return $pos === false ? '' : mb_substr($base, 0, $pos);
+    }
+
+    /**
+     * @return resource
+     */
+    private static function streamContext(): mixed
+    {
+
+        return stream_context_create([
+            'http' => ['timeout' => 5],
+            'https' => ['timeout' => 5],
+        ]);
     }
 }
