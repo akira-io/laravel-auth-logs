@@ -281,10 +281,17 @@ Schema::table('authentication_logs', function (Blueprint $table) {
 
 **Solutions:**
 
-1. Implement automatic purging:
-```bash
-# Schedule in app/Console/Kernel.php
-$schedule->command('auth-logs:purge')->daily();
+1. Schedule cleanup in your application:
+```php
+use Akira\LaravelAuthLogs\AuthenticationLog;
+
+$schedule->call(function (): void {
+    $days = (int) config('auth-logs.purge', 365);
+
+    AuthenticationLog::query()
+        ->where('login_at', '<', now()->subDays($days))
+        ->delete();
+})->daily();
 ```
 
 2. Reduce retention period:

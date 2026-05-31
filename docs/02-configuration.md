@@ -117,7 +117,7 @@ Configure how long authentication logs are retained:
 'purge' => 365,
 ```
 
-Logs older than this number of days will be purged. Set to `null` to keep logs indefinitely.
+The package does not purge logs automatically. Use this value from your application's scheduled cleanup, or set it to `null` if your application keeps logs indefinitely.
 
 ## Environment Variables
 
