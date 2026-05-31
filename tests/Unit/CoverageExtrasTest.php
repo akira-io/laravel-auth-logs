@@ -13,6 +13,8 @@ use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
 use Akira\LaravelAuthLogs\Templates\NewDevice;
 use Akira\LaravelAuthLogs\Tests\Fixtures\User;
 use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Events\Logout;
+use Illuminate\Contracts\Auth\Authenticatable;
 
 it('facade accessor returns underlying class', function (): void {
 
@@ -24,7 +26,47 @@ it('facade accessor returns underlying class', function (): void {
 
 it('logout listener handle executes', function (): void {
 
-    new LogoutListener()->handle();
+    config()->set('auth-logs.db_connection', 'testing');
+
+    $user = User::create(['email' => 'logout-listener@example.test']);
+
+    $listener = new LogoutListener();
+    $listener->handle(new Logout('web', $user));
+    $listener->handle(new Logout('web', new class implements Authenticatable
+    {
+        public function getAuthIdentifierName(): string
+        {
+            return 'id';
+        }
+
+        public function getAuthIdentifier(): null
+        {
+            return null;
+        }
+
+        public function getAuthPasswordName(): string
+        {
+            return 'password';
+        }
+
+        public function getAuthPassword(): string
+        {
+            return '';
+        }
+
+        public function getRememberToken(): null
+        {
+            return null;
+        }
+
+        public function setRememberToken($value): void {}
+
+        public function getRememberTokenName(): string
+        {
+            return 'remember_token';
+        }
+    }));
+
     expect(true)->toBeTrue();
 });
 
