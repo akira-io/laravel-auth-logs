@@ -87,11 +87,33 @@ it('gets location data from local fixture and builds notification', function ():
     expect($sender->getIpAddress())->toBe('1.1.1.1')
         ->and($sender->getUserAgent())->toBe('UA/1.0')
         ->and($sender->getFullLocation())->toBe('Emerald City, Wonderland')
-        ->and($sender->getLoginAt())->toBeString();
+        ->and($sender->getLoginAt())->toBeString()
+        ->and($log->fresh()->location)->toHaveKey('city', 'Emerald City');
 
     $sender->send();
 
     Notification::assertSentTo($user, AuthLogsNotification::class);
+});
+
+it('uses a stored resolved location without another lookup', function (): void {
+    config()->set('auth-logs.db_connection', 'testing');
+    config()->set('auth-logs.geolocation_api', 'php://temp');
+
+    $user = User::create([
+        'email' => 'stored-location@example.test',
+        'created_at' => now()->subMinutes(10),
+        'updated_at' => now()->subMinutes(10),
+    ]);
+
+    request()->server->set('REMOTE_ADDR', '1.1.1.2');
+    request()->headers->set('User-Agent', 'UA/stored');
+    request()->merge(['location' => ['city' => 'Porto', 'country' => 'Portugal']]);
+
+    $log = CreateAuthenticationLog::for($user, true);
+
+    $sender = SendNotification::make($user, NewDevice::class, $log);
+
+    expect($sender->getFullLocation())->toBe('Porto, Portugal');
 });
 
 it('returns empty collection when geolocation fails', function (): void {
