@@ -6,6 +6,8 @@ namespace Akira\LaravelAuthLogs\Tests;
 
 use Akira\Debugger\DebuggerServiceProvider;
 use Akira\LaravelAuthLogs\LaravelAuthLogsServiceProvider;
+use Illuminate\Container\Container;
+use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,6 +17,8 @@ abstract class TestCase extends Orchestra
 {
     protected function setUp(): void
     {
+
+        $this->resetAuthLogsConfiguration();
 
         parent::setUp();
 
@@ -27,7 +31,6 @@ abstract class TestCase extends Orchestra
     final public function getEnvironmentSetUp($app): void
     {
 
-        // Configure in-memory sqlite for tests
         config()->set('database.default', 'testing');
         config()->set('database.connections.testing', [
             'driver' => 'sqlite',
@@ -35,7 +38,6 @@ abstract class TestCase extends Orchestra
             'prefix' => '',
         ]);
 
-        // Minimal users table for morph relations in tests
         Schema::create('users', function (Blueprint $table): void {
 
             $table->id();
@@ -44,7 +46,6 @@ abstract class TestCase extends Orchestra
             $table->timestamps();
         });
 
-        // Authentication logs table used by the package model
         Schema::create('authentication_logs', function (Blueprint $table): void {
 
             $table->id();
@@ -67,5 +68,26 @@ abstract class TestCase extends Orchestra
             LaravelAuthLogsServiceProvider::class,
             DebuggerServiceProvider::class,
         ];
+    }
+
+    private function resetAuthLogsConfiguration(): void
+    {
+        $container = Container::getInstance();
+
+        if (! $container->bound('config')) {
+            return;
+        }
+
+        $configuration = $container->make('config');
+
+        if (! $configuration instanceof Repository) {
+            return;
+        }
+
+        if (is_array($configuration->get('auth-logs', []))) {
+            return;
+        }
+
+        $configuration->set('auth-logs', []);
     }
 }
