@@ -3,7 +3,7 @@
 Follow the steps below to integrate Laravel Auth Logs into your application.
 
 ## Prerequisites
-- Laravel 12 or newer
+- Laravel 12 or 13
 - PHP 8.4 or newer
 - Composer
 

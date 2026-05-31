@@ -23,7 +23,9 @@ This package logs all authentication events in your Laravel application. It logs
 ## Requirements
 
 - PHP 8.4 or higher
-- Laravel 12.0 or higher
+- Laravel 12.0 or 13.0
+
+The test workflow validates both Laravel 12 and Laravel 13 dependency sets.
 
 ## Installation
 
