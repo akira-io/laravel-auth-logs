@@ -50,11 +50,7 @@ Define how authentication notifications are delivered:
 'notification_via' => ['mail'],
 ```
 
-The package uses Laravel's notification system. You can add multiple channels:
-
-```php
-'notification_via' => ['mail', 'slack', 'database'],
-```
+The built-in notification supports the `mail` channel. Use a custom notification implementation if your application needs Slack, SMS, database, or another channel.
 
 ## Authentication Events
 

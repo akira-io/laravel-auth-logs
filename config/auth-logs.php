@@ -64,8 +64,8 @@ return [
     | Notification Channels
     |--------------------------------------------------------------------------
     |
-    | Define the notification channels for authentication events. The default
-    | channel is 'mail'. Add other channels such as 'slack' or 'nexmo' if required.
+    | Define the notification channels for authentication events. The built-in
+    | notification supports the 'mail' channel.
     |
     */
     'notification_via' => ['mail'],

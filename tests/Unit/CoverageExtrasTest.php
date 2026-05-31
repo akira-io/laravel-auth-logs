@@ -81,6 +81,21 @@ it('notification channels and toMail are returned', function (): void {
     expect(method_exists($mail, 'render'))->toBeTrue();
 });
 
+it('notification rejects unsupported channels', function (): void {
+
+    $notification = new AuthLogsNotification(new NewDevice('2025-01-01 00:00:00', '127.0.0.1', 'Nowhere', 'UA'));
+    $notifiable = new class
+    {
+        public function notifyAuthenticationLogVia(): array
+        {
+            return ['slack'];
+        }
+    };
+
+    expect(fn (): array => $notification->via($notifiable))
+        ->toThrow(\RuntimeException::class, 'Laravel Auth Logs only supports the mail notification channel by default.');
+});
+
 it('authentication log morph relation resolves authenticatable', function (): void {
 
     config()->set('auth-logs.db_connection', 'testing');

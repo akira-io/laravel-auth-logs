@@ -9,6 +9,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use RuntimeException;
 
 final class AuthLogsNotification extends Notification implements ShouldQueue
 {
@@ -27,7 +28,20 @@ final class AuthLogsNotification extends Notification implements ShouldQueue
     public function via(mixed $notifiable): array
     {
 
-        return $notifiable->notifyAuthenticationLogVia(); // @phpstan-ignore-line
+        $channels = type($notifiable->notifyAuthenticationLogVia())->asArray(); // @phpstan-ignore-line
+        $resolvedChannels = [];
+
+        foreach ($channels as $channel) {
+            $channel = type($channel)->asString();
+
+            if ($channel !== 'mail') {
+                throw new RuntimeException('Laravel Auth Logs only supports the mail notification channel by default.');
+            }
+
+            $resolvedChannels[] = $channel;
+        }
+
+        return $resolvedChannels;
     }
 
     /**
