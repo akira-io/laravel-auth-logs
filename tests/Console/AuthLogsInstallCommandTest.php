@@ -23,7 +23,7 @@ test('it publishes the migration file', function (): void {
 
     $this->artisan('auth-logs:install')
         ->expectsOutput('Publishing migrations...')
-        ->expectsOutput('Migrations published successfully in database/migrations/2025_01_23_201639_create_laravel_auth_logs_table.php')
+        ->expectsOutput('Migrations published successfully in database/migrations')
         ->assertExitCode(0);
 });
 
