@@ -21,7 +21,12 @@ final class GetLocation
     public static function make(string $ip): Collection
     {
 
-        $apiBase = type(config('auth-logs.geolocation_api'))->asString();
+        $apiBase = config('auth-logs.geolocation_api');
+
+        if (! is_string($apiBase) || $apiBase === '') {
+            return collect(self::EMPTY_COLLECTION);
+        }
+
         $scheme = self::schemeFrom($apiBase);
 
         if ($scheme === 'file') {
@@ -39,7 +44,7 @@ final class GetLocation
         // produce a single return to make paths explicit and testable.
         $decoded = null;
 
-        if (str_starts_with(type(config('auth-logs.geolocation_api'))->asString(), 'file://')) {
+        if (str_starts_with($apiBase, 'file://')) {
             $decoded = $data ?? (object) self::EMPTY_COLLECTION;
         } else {
             // @phpstan-ignore-next-line
@@ -67,15 +72,13 @@ final class GetLocation
             return json_decode((string) file_get_contents($path));
         }
 
-        $stream = @fopen($url, 'r');
+        $contents = @file_get_contents($url, false, self::streamContext());
 
-        if (! is_resource($stream)) {
+        if ($contents === false) {
             return null;
         }
 
-        fclose($stream);
-
-        return json_decode(file_get_contents($url)) ?? null; // @phpstan-ignore-line
+        return json_decode($contents) ?? null;
     }
 
     /**
@@ -97,5 +100,17 @@ final class GetLocation
         $pos = mb_strpos($base, '://');
 
         return $pos === false ? '' : mb_substr($base, 0, $pos);
+    }
+
+    /**
+     * @return resource
+     */
+    private static function streamContext(): mixed
+    {
+
+        return stream_context_create([
+            'http' => ['timeout' => 5],
+            'https' => ['timeout' => 5],
+        ]);
     }
 }

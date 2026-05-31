@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
         Schema::create( config('auth-logs.table_name'), function (Blueprint $table) {
             $table->id();
@@ -19,5 +19,10 @@ return new class extends Migration
             $table->boolean('cleared_by_user')->default(false);
             $table->json('location')->nullable();
         });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists(config('auth-logs.table_name'));
     }
 };

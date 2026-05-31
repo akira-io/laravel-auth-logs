@@ -45,36 +45,22 @@ it('failed login listener logs for user', function (): void {
     expect(AuthenticationLog::query()->count())->toBe(1);
 });
 
-it('logout listener marks the latest log as logged out', function (): void {
+it('logout listener registers logout on the latest authentication log', function (): void {
     config()->set('auth-logs.db_connection', 'testing');
-    Notification::fake();
 
-    $user = User::create(['email' => 'lo@example.test', 'created_at' => now()->subMinutes(10), 'updated_at' => now()->subMinutes(10)]);
+    $user = User::create(['email' => 'logout@example.test', 'created_at' => now()->subMinutes(10), 'updated_at' => now()->subMinutes(10)]);
 
-    request()->server->set('REMOTE_ADDR', '8.8.8.8');
-    request()->headers->set('User-Agent', 'UA/8');
+    request()->server->set('REMOTE_ADDR', '7.7.7.7');
+    request()->headers->set('User-Agent', 'UA/7');
     request()->merge(['location' => []]);
 
-    new LoginListener()->handle(new Login('web', $user, false));
-
-    expect(AuthenticationLog::query()->first()->logout_at)->toBeNull();
+    $log = CreateAuthenticationLog::for($user, true);
 
     new LogoutListener()->handle(new Logout('web', $user));
 
-    $log = AuthenticationLog::query()->first();
-
-    expect($log->logout_at)->not->toBeNull()
-        ->and($log->cleared_by_user)->toBeTrue();
-});
-
-it('logout listener skips when user does not implement registerLogout', function (): void {
-    config()->set('auth-logs.db_connection', 'testing');
-
-    $user = new class implements \Illuminate\Contracts\Auth\Authenticatable {
-        use \Illuminate\Auth\Authenticatable;
-    };
-
-    expect(fn () => new LogoutListener()->handle(new Logout('web', $user)))->not->toThrow(Throwable::class);
+    expect($log->fresh())
+        ->logout_at->not->toBeNull()
+        ->cleared_by_user->toBeTrue();
 });
 
 it('logout event is registered to LogoutListener independently', function (): void {

@@ -27,7 +27,7 @@ final class AuthLogsInstallCommand extends Command
         $this->info('Publishing migrations...');
         $this->callSilent('vendor:publish', ['--tag' => 'auth-logs-migrations', '--force' => true]);
 
-        $this->info('Migrations published successfully in database/migrations/2025_01_23_201639_create_laravel_auth_logs_table.php');
+        $this->info('Migrations published successfully in database/migrations');
 
         $this->info('Installation complete.');
 

@@ -64,8 +64,8 @@ return [
     | Notification Channels
     |--------------------------------------------------------------------------
     |
-    | Define the notification channels for authentication events. The default
-    | channel is 'mail'. Add other channels such as 'slack' or 'nexmo' if required.
+    | Define the notification channels for authentication events. The built-in
+    | notification supports the 'mail' channel.
     |
     */
     'notification_via' => ['mail'],
@@ -127,8 +127,8 @@ return [
     | Log Retention Period
     |--------------------------------------------------------------------------
     |
-    | Specify the retention period for authentication logs (in days). Logs older
-    | than this period will be purged automatically to optimize database usage.
+    | Specify the retention period for authentication logs (in days). Use this
+    | value from your application's own scheduled cleanup.
     |
     */
     'purge' => 365,

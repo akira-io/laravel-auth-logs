@@ -101,9 +101,7 @@ if ($user->isNew()) {
 
 ### Register Logout
 
-Logout events are recorded automatically when Laravel fires the `Logout` event. No manual call is required for standard logouts.
-
-To record a logout outside of the default event flow, call `registerLogout()` directly:
+Manually register a logout:
 
 ```php
 $user->registerLogout();
@@ -194,7 +192,7 @@ $log->location['lon']        // Longitude
 
 If geolocation lookup fails, the location array will be empty.
 
-## Custom Notification Channels
+## Notification Channels
 
 Override the notification channels for a specific user:
 
@@ -205,15 +203,12 @@ class User extends Authenticatable
 
     public function notifyAuthenticationLogVia(): array
     {
-        // Send to mail and Slack for admin users
-        if ($this->isAdmin()) {
-            return ['mail', 'slack'];
-        }
-
         return ['mail'];
     }
 }
 ```
+
+The built-in notification supports `mail`. Use a custom notification implementation before returning other channels.
 
 ## Disabling Automatic Notifications
 

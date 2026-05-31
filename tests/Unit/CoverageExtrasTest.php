@@ -14,6 +14,7 @@ use Akira\LaravelAuthLogs\Templates\NewDevice;
 use Akira\LaravelAuthLogs\Tests\Fixtures\User;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Contracts\Auth\Authenticatable;
 
 it('facade accessor returns underlying class', function (): void {
 
@@ -23,12 +24,49 @@ it('facade accessor returns underlying class', function (): void {
     expect($result)->toBe(Akira\LaravelAuthLogs\LaravelAuthLogs::class);
 });
 
-it('logout listener handle executes without a prior log entry', function (): void {
+it('logout listener handle executes', function (): void {
+
     config()->set('auth-logs.db_connection', 'testing');
 
-    $user = User::create(['email' => 'cov_lo@example.test', 'created_at' => now(), 'updated_at' => now()]);
+    $user = User::create(['email' => 'logout-listener@example.test']);
 
-    new LogoutListener()->handle(new Logout('web', $user));
+    $listener = new LogoutListener();
+    $listener->handle(new Logout('web', $user));
+    $listener->handle(new Logout('web', new class implements Authenticatable
+    {
+        public function getAuthIdentifierName(): string
+        {
+            return 'id';
+        }
+
+        public function getAuthIdentifier(): null
+        {
+            return null;
+        }
+
+        public function getAuthPasswordName(): string
+        {
+            return 'password';
+        }
+
+        public function getAuthPassword(): string
+        {
+            return '';
+        }
+
+        public function getRememberToken(): null
+        {
+            return null;
+        }
+
+        public function setRememberToken($value): void {}
+
+        public function getRememberTokenName(): string
+        {
+            return 'remember_token';
+        }
+    }));
+
     expect(true)->toBeTrue();
 });
 
@@ -41,6 +79,21 @@ it('notification channels and toMail are returned', function (): void {
     expect($channels)->toContain('mail');
     // ensure we hit the template path as well
     expect(method_exists($mail, 'render'))->toBeTrue();
+});
+
+it('notification rejects unsupported channels', function (): void {
+
+    $notification = new AuthLogsNotification(new NewDevice('2025-01-01 00:00:00', '127.0.0.1', 'Nowhere', 'UA'));
+    $notifiable = new class
+    {
+        public function notifyAuthenticationLogVia(): array
+        {
+            return ['slack'];
+        }
+    };
+
+    expect(fn (): array => $notification->via($notifiable))
+        ->toThrow(\RuntimeException::class, 'Laravel Auth Logs only supports the mail notification channel by default.');
 });
 
 it('authentication log morph relation resolves authenticatable', function (): void {
