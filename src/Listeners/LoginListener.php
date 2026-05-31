@@ -29,8 +29,10 @@ final class LoginListener
 
         $log = CreateAuthenticationLog::for($user, isSuccessFull: true);
 
+        $shouldSendNotification = (bool) config('auth-logs.templates.new_device.notification', true);
+
         // @phpstan-ignore-next-line
-        if (! $isKnown instanceof AuthenticationLog && ! $user->isNew()) {
+        if ($shouldSendNotification && ! $isKnown instanceof AuthenticationLog && ! $user->isNew()) {
             SendNotification::make(authenticatable: $user, template: $template, log: $log)->send();
         }
     }
