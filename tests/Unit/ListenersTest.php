@@ -97,6 +97,24 @@ it('logout listener registers logout on the latest authentication log', function
         ->cleared_by_user->toBeTrue();
 });
 
+it('configured auth events are registered to their configured listeners', function (): void {
+    $configuredListeners = [
+        [(string) config('auth-logs.events.login'), (string) config('auth-logs.listeners.login')],
+        [(string) config('auth-logs.events.failed'), (string) config('auth-logs.listeners.failed')],
+        [(string) config('auth-logs.events.logout'), (string) config('auth-logs.listeners.logout')],
+        [(string) config('auth-logs.events.logout-other-devices'), (string) config('auth-logs.listeners.other_device_logout')],
+    ];
+
+    $raw = app('events')->getRawListeners();
+
+    foreach ($configuredListeners as [$event, $listener]) {
+        expect($event)->not->toBeEmpty()
+            ->and($listener)->not->toBeEmpty()
+            ->and($raw)->toHaveKey($event)
+            ->and($raw[$event])->toContain($listener);
+    }
+});
+
 it('logout event is registered to LogoutListener independently', function (): void {
     $raw = app('events')->getRawListeners();
 
