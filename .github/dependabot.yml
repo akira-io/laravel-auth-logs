@@ -19,13 +19,3 @@ updates:
     commit-message:
       prefix: "chore(deps)"
     open-pull-requests-limit: 10
-
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-    commit-message:
-      prefix: "chore(deps)"
-    open-pull-requests-limit: 5
