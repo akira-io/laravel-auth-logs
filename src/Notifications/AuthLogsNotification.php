@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Akira\LaravelAuthLogs\Notifications;
 
-use Akira\LaravelAuthLogs\Contracts\Template;
+use Akira\LaravelAuthLogs\Contracts\ToMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -16,13 +16,11 @@ final class AuthLogsNotification extends Notification implements ShouldQueue
     use Queueable;
 
     /**
-     * Create a new notification instance.
+     * @phpstan-param ToMail $template
      */
-    public function __construct(private readonly Template $template) {}
+    public function __construct(private readonly ToMail $template) {}
 
     /**
-     * Get the notification's delivery channels.
-     *
      * @return array<string>
      */
     public function via(mixed $notifiable): array
@@ -45,7 +43,7 @@ final class AuthLogsNotification extends Notification implements ShouldQueue
     }
 
     /**
-     * Get the mail representation of the notification.
+     * @phpstan-return MailMessage
      */
     public function toMail(mixed $notifiable): MailMessage
     {

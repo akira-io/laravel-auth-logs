@@ -4,16 +4,13 @@ declare(strict_types=1);
 
 namespace Akira\LaravelAuthLogs\Contracts;
 
-use Illuminate\Notifications\Messages\MailMessage;
-
-/**
- * @method MailMessage toMail(mixed $notifiable)
- *                                               /
- */
 interface Template
 {
     /**
-     * Get the mail representation of the notification.
+     * @phpstan-param string $loginAt
+     * @phpstan-param string $ipAddress
+     * @phpstan-param string $location
+     * @phpstan-param string $userAgent
      */
     public function __construct(
         string $loginAt,

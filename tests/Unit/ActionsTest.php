@@ -7,6 +7,7 @@ use Akira\LaravelAuthLogs\Actions\Device;
 use Akira\LaravelAuthLogs\Actions\GetLocation;
 use Akira\LaravelAuthLogs\Actions\SendNotification;
 use Akira\LaravelAuthLogs\AuthenticationLog;
+use Akira\LaravelAuthLogs\Contracts\Template;
 use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
 use Akira\LaravelAuthLogs\Templates\NewDevice;
 use Akira\LaravelAuthLogs\Tests\Fixtures\User;
@@ -106,6 +107,34 @@ it('uses a stored resolved location without another lookup', function (): void {
     expect($sender->getFullLocation())->toBe('Porto, Portugal');
 });
 
+it('rejects notification templates that cannot render mail', function (): void {
+    config()->set('auth-logs.db_connection', 'testing');
+
+    $user = User::create([
+        'email' => 'template-contract@example.test',
+        'created_at' => now()->subMinutes(10),
+        'updated_at' => now()->subMinutes(10),
+    ]);
+
+    request()->server->set('REMOTE_ADDR', '1.1.1.3');
+    request()->headers->set('User-Agent', 'UA/template-contract');
+    request()->merge(['location' => []]);
+
+    $log = CreateAuthenticationLog::for($user, true);
+    $template = new readonly class('', '', '', '') implements Template
+    {
+        public function __construct(
+            string $loginAt,
+            string $ipAddress,
+            string $location,
+            string $userAgent,
+        ) {}
+    };
+
+    expect(fn (): mixed => SendNotification::make($user, $template::class, $log)->send())
+        ->toThrow(RuntimeException::class, 'Auth log notification template must implement the mail template contract.');
+});
+
 it('returns empty collection when geolocation fails', function (): void {
     config()->set('auth-logs.geolocation_api', 'file:///path/does/not/exist');
 
@@ -136,28 +165,28 @@ it('validates send notification properties', function (): void {
     request()->merge(['location' => []]);
     $log = CreateAuthenticationLog::for($user, false);
 
-    $ref = new \ReflectionClass(SendNotification::class);
+    $ref = new ReflectionClass(SendNotification::class);
     $ctor = $ref->getConstructor();
     $instance = $ref->newInstanceWithoutConstructor();
     $ctor->invoke($instance, $user, '', $log);
 
-    $method = new \ReflectionMethod($instance, 'send');
+    $method = new ReflectionMethod($instance, 'send');
 
     expect(fn (): mixed => $method->invoke($instance))
         ->toThrow(RuntimeException::class);
 
     $noAuth = $ref->newInstanceWithoutConstructor();
-    $sendNoAuth = new \ReflectionMethod($noAuth, 'send');
+    $sendNoAuth = new ReflectionMethod($noAuth, 'send');
     expect(fn (): mixed => $sendNoAuth->invoke($noAuth))
         ->toThrow(RuntimeException::class);
 
     $missingLog = $ref->newInstanceWithoutConstructor();
-    $pa = new \ReflectionProperty(SendNotification::class, 'authenticatable');
-    $pt = new \ReflectionProperty(SendNotification::class, 'template');
+    $pa = new ReflectionProperty(SendNotification::class, 'authenticatable');
+    $pt = new ReflectionProperty(SendNotification::class, 'template');
     $pa->setValue($missingLog, $user);
     $pt->setValue($missingLog, NewDevice::class);
 
-    $sendMissingLog = new \ReflectionMethod($missingLog, 'send');
+    $sendMissingLog = new ReflectionMethod($missingLog, 'send');
     expect(fn (): mixed => $sendMissingLog->invoke($missingLog))
         ->toThrow(RuntimeException::class);
 });

@@ -6,6 +6,7 @@ namespace Akira\LaravelAuthLogs\Actions;
 
 use Akira\LaravelAuthLogs\AuthenticationLog;
 use Akira\LaravelAuthLogs\Concerns\InteractsWithLogs;
+use Akira\LaravelAuthLogs\Contracts\ToMail;
 use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
 use Illuminate\Contracts\Auth\Authenticatable;
 use RuntimeException;
@@ -15,7 +16,7 @@ final readonly class SendNotification
     use InteractsWithLogs;
 
     /**
-     * Send notification to the user.
+     * @phpstan-param string $template
      */
     public function __construct(
         private Authenticatable $authenticatable,
@@ -24,7 +25,7 @@ final readonly class SendNotification
     ) {}
 
     /**
-     * Create a new instance of the class.
+     * @phpstan-param string $template
      */
     public static function make(Authenticatable $authenticatable, string $template, AuthenticationLog $log): self
     {
@@ -33,7 +34,7 @@ final readonly class SendNotification
     }
 
     /**
-     * Send the notification.
+     * @throws RuntimeException
      */
     public function send(): void
     {
@@ -46,7 +47,7 @@ final readonly class SendNotification
     }
 
     /**
-     * Validate the properties.
+     * @throws RuntimeException
      */
     private function validateProperties(): void
     {
@@ -65,21 +66,25 @@ final readonly class SendNotification
     }
 
     /**
-     * Build the notification.
+     * @throws RuntimeException
      */
     private function buildNotification(): AuthLogsNotification
     {
 
-        return new AuthLogsNotification(
-            template: app(
-                abstract  : $this->template,
-                parameters: [
-                    'loginAt' => $this->getLoginAt(),
-                    'ipAddress' => $this->getIpAddress(),
-                    'location' => $this->getFullLocation(),
-                    'userAgent' => $this->getUserAgent(),
-                ],
-            ),
+        $template = app(
+            abstract  : $this->template,
+            parameters: [
+                'loginAt' => $this->getLoginAt(),
+                'ipAddress' => $this->getIpAddress(),
+                'location' => $this->getFullLocation(),
+                'userAgent' => $this->getUserAgent(),
+            ],
         );
+
+        if (! $template instanceof ToMail) {
+            throw new RuntimeException('Auth log notification template must implement the mail template contract.');
+        }
+
+        return new AuthLogsNotification(template: $template);
     }
 }
