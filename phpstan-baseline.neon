@@ -1,10 +1,5 @@
 parameters:
   ignoreErrors:
-    - message: '#^Parameter \$template of class Akira\\LaravelAuthLogs\\Notifications\\AuthLogsNotification constructor expects Akira\\LaravelAuthLogs\\Contracts\\Template, mixed given\.$#'
-      identifier: argument.type
-      count: 1
-      path: src/Actions/SendNotification.php
-
     - message: '#^Property Akira\\LaravelAuthLogs\\Actions\\SendNotification\:\:\$authenticatable in isset\(\) is not nullable nor uninitialized\.$#'
       identifier: isset.initializedProperty
       count: 1
