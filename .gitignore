@@ -1,6 +1,7 @@
 # Composer Related
 composer.lock
 /vendor
+/node_modules
 
 # Caches
 .phpunit.cache
