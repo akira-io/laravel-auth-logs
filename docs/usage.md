@@ -56,7 +56,8 @@ Subscribed events (configurable in `config/auth-logs.php`):
 Default behavior:
 - Login: Creates a successful log and, if the device is new and the user isn’t brand new, sends a “new device” notification
 - Failed: If a user instance exists, creates a failed log and sends a “failed login” notification
-- Logout / OtherDeviceLogout: Hooks exist for customization; default listeners are no-op
+- Logout: Updates the latest authentication log with `logout_at` and marks it as cleared by the user
+- OtherDeviceLogout: Hook exists for customization; the default listener is no-op
 
 Customize listeners in config:
 ```php
@@ -226,4 +227,3 @@ Logs not created on logout:
 
 Helper methods differ across versions:
 - Prefer using `authenticationLogs()` and `latestAuthentication()` queries
-

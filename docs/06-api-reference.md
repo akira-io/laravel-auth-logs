@@ -212,9 +212,9 @@ Handles logout events.
 
 ##### `handle()`
 ```php
-public function handle(): void
+public function handle(Logout $event): void
 ```
-Currently a placeholder for custom logout handling.
+Marks the latest authentication log as logged out when the authenticated model supports logout registration.
 
 ### `Akira\LaravelAuthLogs\Listeners\OtherDeviceLogoutListener`
 
