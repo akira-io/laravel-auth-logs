@@ -41,9 +41,11 @@ final readonly class SendNotification
 
         $this->validateProperties();
 
-        $notification = $this->buildNotification();
-
-        $this->authenticatable->notify($notification); // @phpstan-ignore-line
+        /** @phpstan-ignore-next-line */
+        $this->authenticatable->notify(new AuthLogsNotification(
+            template: $this->template,
+            log     : $this->log,
+        ));
     }
 
     /**
@@ -63,28 +65,9 @@ final readonly class SendNotification
         if (! isset($this->log)) {
             throw new RuntimeException('Authentication log is required'); // @codeCoverageIgnoreLine
         }
-    }
 
-    /**
-     * @throws RuntimeException
-     */
-    private function buildNotification(): AuthLogsNotification
-    {
-
-        $template = app(
-            abstract  : $this->template,
-            parameters: [
-                'loginAt' => $this->getLoginAt(),
-                'ipAddress' => $this->getIpAddress(),
-                'location' => $this->getFullLocation(),
-                'userAgent' => $this->getUserAgent(),
-            ],
-        );
-
-        if (! $template instanceof ToMail) {
+        if (! is_a($this->template, ToMail::class, true)) {
             throw new RuntimeException('Auth log notification template must implement the mail template contract.');
         }
-
-        return new AuthLogsNotification(template: $template);
     }
 }

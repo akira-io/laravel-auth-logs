@@ -7,6 +7,7 @@ namespace Akira\LaravelAuthLogs;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use TypeError;
 
 /**
  * @property int $id
@@ -39,16 +40,22 @@ final class AuthenticationLog extends Model
         ];
 
     /**
-     * Get the database connection for the model.
+     * @throws TypeError
      */
     public function getConnectionName(): string
     {
 
-        return type(config('auth-logs.db_connection', parent::getConnectionName()))->asString(); // @codeCoverageIgnoreLine
+        $connection = config('auth-logs.db_connection', parent::getConnectionName());
+
+        if ($connection === null) {
+            return type(config('database.default'))->asString();
+        }
+
+        return type($connection)->asString();
     }
 
     /**
-     * Get the table associated with the model.
+     * @throws TypeError
      */
     public function getTable(): string
     {
@@ -57,8 +64,6 @@ final class AuthenticationLog extends Model
     }
 
     /**
-     * Get the authenticatable model associated with the log.
-     *
      * @return MorphTo<Model, $this>
      */
     public function authenticatable(): MorphTo
@@ -68,7 +73,7 @@ final class AuthenticationLog extends Model
     }
 
     /**
-     * Get the attributes that should be cast.
+     * @return array<string, string>
      */
     protected function casts(): array
     {

@@ -17,6 +17,12 @@ it('authentication log casts, table and connection respond', function (): void {
         ->and($model->getTable())->toBe('authentication_logs');
 });
 
+it('uses the default database connection when auth logs connection is null', function (): void {
+    config()->set('auth-logs.db_connection');
+
+    expect(new AuthenticationLog()->getConnectionName())->toBe('testing');
+});
+
 it('templates render a mail message', function (): void {
     $user = new User(['email' => 't@example.test']);
 
@@ -31,4 +37,3 @@ it('templates render a mail message', function (): void {
         ->and(method_exists($mail2, 'render'))
         ->toBeTrue();
 });
-
