@@ -1,60 +1,65 @@
 # Configuration
 
-The configuration file `config/auth-logs.php` controls all aspects of the authentication logging behavior.
+The published `config/auth-logs.php` file controls storage, formatting, geolocation, event subscriptions, listener classes, notification templates, and retention values.
 
 ## Table Name
-
-Customize the database table name for storing authentication logs:
 
 ```php
 'table_name' => 'authentication_logs',
 ```
 
-You can change this to match your application's naming conventions.
+The value is used by `AuthenticationLog::getTable()` and by the migration stub. Change it before running the migration, or update your schema manually if you rename the table later.
 
 ## Date Format
-
-Define the date format used in notifications:
 
 ```php
 'date_format' => 'Y-m-d H:i:s',
 ```
 
-This format follows PHP's `date()` function conventions.
+This PHP date format is used when building notification template data. It affects the text rendered in mail notifications, not the database cast.
 
 ## Geolocation API
-
-Configure the API endpoint for fetching geolocation data:
 
 ```php
 'geolocation_api' => 'http://ip-api.com/json',
 ```
 
-Currently, only `ip-api.com` is supported. The package fetches location data (city, country, timezone) based on the user's IP address.
+The package appends `/{ip}` to normal HTTP-like endpoints and expects a JSON payload with `status: "success"` for non-file schemes. A failed request, invalid JSON, disabled config, or non-success status returns an empty collection.
+
+Supported runtime shapes:
+
+- `null` or empty string disables lookup.
+- `http://...` or `https://...` calls the endpoint with a 5 second stream timeout.
+- `file://...` is supported for deterministic local fixtures.
+- `data://...` and `php://...` are treated as content-only streams and do not receive an appended IP.
+
+The default config references `ip-api.com`, but custom endpoints can be used when they return compatible data.
 
 ## Database Connection
-
-Specify which database connection to use:
 
 ```php
 'db_connection' => env('AUTH_LOGS_DB_CONNECTION', env('DB_CONNECTION', 'sqlite')),
 ```
 
-Set `AUTH_LOGS_DB_CONNECTION` in your `.env` file to use a different connection, or leave it `null` to use your default connection.
+`AuthenticationLog::getConnectionName()` uses this value. If the value resolves to `null`, the model falls back to `database.default`.
+
+Example:
+
+```env
+AUTH_LOGS_DB_CONNECTION=mysql
+```
 
 ## Notification Channels
-
-Define how authentication notifications are delivered:
 
 ```php
 'notification_via' => ['mail'],
 ```
 
-The built-in notification supports the `mail` channel. Use a custom notification implementation if your application needs Slack, SMS, database, or another channel.
+The built-in `AuthLogsNotification` only supports `mail`. If `notifyAuthenticationLogVia()` returns `slack`, `database`, `sms`, or another channel, the built-in notification throws a `RuntimeException`.
+
+Use custom listeners and your own Laravel notification class when you need non-mail delivery.
 
 ## Authentication Events
-
-Configure which Laravel authentication events to monitor:
 
 ```php
 'events' => [
@@ -65,11 +70,9 @@ Configure which Laravel authentication events to monitor:
 ],
 ```
 
-These events are automatically fired by Laravel during authentication. You can replace them with custom event classes if needed.
+These are the Laravel events the service provider subscribes to. Replace them only if your application dispatches compatible event classes.
 
 ## Event Listeners
-
-Register custom listeners for authentication events:
 
 ```php
 'listeners' => [
@@ -80,11 +83,14 @@ Register custom listeners for authentication events:
 ],
 ```
 
-You can extend or replace these listeners with your own implementations to customize logging behavior.
+Default behavior:
+
+- `LoginListener` creates a successful log and may send a new device mail notification.
+- `FailedLoginListener` creates a failed log only when the event contains a user instance and may send a failed login mail notification.
+- `LogoutListener` calls `registerLogout()` when the event user supports that method.
+- `OtherDeviceLogoutListener` is an empty hook for application customization.
 
 ## Notification Templates
-
-Control when notifications are sent and which templates to use:
 
 ```php
 'templates' => [
@@ -99,37 +105,21 @@ Control when notifications are sent and which templates to use:
 ],
 ```
 
-### New Device Notification
+Template classes used by built-in notifications must implement `Akira\LaravelAuthLogs\Contracts\ToMail`.
 
-Sent when a user logs in from an unrecognized device (new IP + user-agent combination). Set `AUTH_LOGS_NEW_DEVICE_NOTIFICATION=false` in `.env` to disable.
+Environment toggles:
 
-### Failed Login Notification
-
-Sent when someone attempts to log in with incorrect credentials. Set `AUTH_LOGS_FAILED_LOGIN_NOTIFICATION=false` in `.env` to disable.
-
-You can create custom templates by implementing the `Akira\LaravelAuthLogs\Contracts\ToMail` contract.
+```env
+AUTH_LOGS_NEW_DEVICE_NOTIFICATION=true
+AUTH_LOGS_FAILED_LOGIN_NOTIFICATION=true
+```
 
 ## Log Retention Period
-
-Configure how long authentication logs are retained:
 
 ```php
 'purge' => 365,
 ```
 
-The package does not purge logs automatically. Use this value from your application's scheduled cleanup, or set it to `null` if your application keeps logs indefinitely.
-
-## Environment Variables
-
-Add these variables to your `.env` file for quick configuration:
-
-```env
-# Database connection (optional)
-AUTH_LOGS_DB_CONNECTION=mysql
-
-# Notification toggles
-AUTH_LOGS_NEW_DEVICE_NOTIFICATION=true
-AUTH_LOGS_FAILED_LOGIN_NOTIFICATION=true
-```
+The package does not schedule or execute purges automatically. Use this value from your own scheduled command or closure. Set it to `null` only if your cleanup code explicitly handles `null`.
 
 **Previous:** [Installation](01-installation.md) | **Next:** [Usage](03-usage.md)

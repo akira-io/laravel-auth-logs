@@ -1,388 +1,286 @@
 # API Reference
 
-Complete reference for all public classes, traits, contracts, and methods provided by the package.
-
-## Traits
-
-### `Akira\LaravelAuthLogs\Concerns\AuthLogs`
-
-Add to your authenticatable model to enable authentication logging.
-
-#### Relationships
-
-##### `authenticationLogs()`
-```php
-public function authenticationLogs(): MorphMany
-```
-Returns all authentication logs for the user, ordered by most recent first.
-
-##### `latestAuthentication()`
-```php
-public function latestAuthentication(): MorphOne
-```
-Returns the most recent authentication log entry.
-
-#### Query Methods
-
-##### `lastLoginAt()`
-```php
-public function lastLoginAt(): ?Carbon
-```
-Returns the timestamp of the last login attempt (successful or failed).
-
-##### `lastSuccessfulLoginAt()`
-```php
-public function lastSuccessfulLoginAt(): ?Carbon
-```
-Returns the timestamp of the last successful login.
-
-##### `lastLoginIp()`
-```php
-public function lastLoginIp(): ?string
-```
-Returns the IP address of the last login attempt.
-
-##### `lastSuccessfulLoginIp()`
-```php
-public function lastSuccessfulLoginIp(): ?string
-```
-Returns the IP address of the last successful login.
-
-##### `previousLoginAt()`
-```php
-public function previousLoginAt(): ?Carbon
-```
-Returns the timestamp of the login before the most recent one.
-
-##### `previousLoginIp()`
-```php
-public function previousLoginIp(): ?string
-```
-Returns the IP address of the previous login.
-
-#### Action Methods
-
-##### `registerLogout()`
-```php
-public function registerLogout(): int|bool
-```
-Updates the latest authentication log with the logout timestamp and marks it as cleared by user.
-
-##### `isNew()`
-```php
-public function isNew(): bool
-```
-Returns `true` if the user was created less than 1 minute ago.
-
-##### `notifyAuthenticationLogVia()`
-```php
-public function notifyAuthenticationLogVia(): array
-```
-Returns the notification channels to use. Override this method to customize per-user channels.
-
-## Models
-
-### `Akira\LaravelAuthLogs\AuthenticationLog`
-
-Eloquent model representing a single authentication log entry.
-
-#### Properties
-
-```php
-public int $id
-public int $authenticatable_id
-public string $authenticatable_type
-public Carbon $login_at
-public bool $login_successful
-public string $ip_address
-public string $user_agent
-public array $location
-public ?Carbon $logout_at
-public bool $cleared_by_user
-public ?Carbon $created_at
-public ?Carbon $updated_at
-```
+Reference for public package classes, traits, contracts, and commands.
 
-#### Relationships
+## Trait: `AuthLogs`
 
-##### `authenticatable()`
-```php
-public function authenticatable(): MorphTo
-```
-Returns the authenticatable model (User) associated with this log.
+Namespace: `Akira\LaravelAuthLogs\Concerns\AuthLogs`
 
-#### Methods
+Add this trait to authenticatable models that should own authentication logs.
 
-##### `getConnectionName()`
-```php
-public function getConnectionName(): string
-```
-Returns the database connection name from configuration.
+### `authenticationLogs()`
 
-##### `getTable()`
-```php
-public function getTable(): string
-```
-Returns the table name from configuration.
+Returns a morph-many relationship to `AuthenticationLog`, ordered by latest `login_at`.
 
-## Actions
+### `latestAuthentication()`
 
-### `Akira\LaravelAuthLogs\Actions\CreateAuthenticationLog`
+Returns the latest morph-one authentication log.
 
-Create authentication log entries.
+### `notifyAuthenticationLogVia(): array`
 
-##### `for()`
-```php
-public static function for(
-    Authenticatable $authenticatable,
-    bool $isSuccessFull = false
-): AuthenticationLog
-```
-Creates a new authentication log for the given user with current request context.
+Returns `config('auth-logs.notification_via', ['mail'])`. Override on the model to customize the channel list. The built-in notification supports only `mail`.
 
-### `Akira\LaravelAuthLogs\Actions\SendNotification`
+### `lastLoginAt()`
 
-Send authentication notifications.
+Returns the `login_at` timestamp for the latest log, or `null`.
 
-##### `make()`
-```php
-public static function make(
-    Authenticatable $authenticatable,
-    string $template,
-    AuthenticationLog $log
-): self
-```
-Creates a new notification sender instance.
+### `lastSuccessfulLoginAt()`
 
-##### `send()`
-```php
-public function send(): void
-```
-Sends the notification through configured channels.
+Returns the `login_at` timestamp for the latest successful log, or `null`.
 
-### `Akira\LaravelAuthLogs\Actions\GetLocation`
+### `lastLoginIp()`
 
-Fetch geolocation data for IP addresses.
+Returns the IP address for the latest log, or `null`.
 
-##### `make()`
-```php
-public static function make(string $ip): Collection
-```
-Fetches geolocation data for the given IP address. Returns empty collection on failure.
+### `lastSuccessfulLoginIp()`
 
-### `Akira\LaravelAuthLogs\Actions\Device`
+Returns the IP address for the latest successful log, or `null`.
 
-Check device recognition.
+### `previousLoginAt()`
 
-##### `isKnownFor()`
-```php
-public static function isKnownFor(
-    Authenticatable $user,
-    ?string $ip,
-    ?string $userAgent
-): ?AuthenticationLog
-```
-Returns the first authentication log matching the IP and user-agent, or `null` if device is unknown.
+Returns the `login_at` timestamp for the log before the latest one, or `null`.
 
-## Listeners
+### `previousLoginIp()`
 
-### `Akira\LaravelAuthLogs\Listeners\LoginListener`
+Returns the IP address for the log before the latest one, or `null`.
 
-Handles successful login events.
+### `registerLogout(): int|bool`
 
-##### `handle()`
-```php
-public function handle(Login $event): void
-```
-Creates authentication log and sends notification if device is new.
+Updates the latest authentication log with `logout_at = now()` and `cleared_by_user = true`.
 
-### `Akira\LaravelAuthLogs\Listeners\FailedLoginListener`
+### `isNew(): bool`
 
-Handles failed login events.
+Returns true when the model was created less than one minute ago. New device notifications use this to avoid notifying immediately after registration.
 
-##### `handle()`
-```php
-public function handle(Failed $event): void
-```
-Creates authentication log and sends notification for failed attempts.
+## Model: `AuthenticationLog`
 
-### `Akira\LaravelAuthLogs\Listeners\LogoutListener`
+Namespace: `Akira\LaravelAuthLogs\AuthenticationLog`
 
-Handles logout events.
+Final Eloquent model for a single authentication log. It has `$timestamps = false`.
 
-##### `handle()`
-```php
-public function handle(Logout $event): void
-```
-Marks the latest authentication log as logged out when the authenticated model supports logout registration.
+Stored attributes:
 
-### `Akira\LaravelAuthLogs\Listeners\OtherDeviceLogoutListener`
+- `id`
+- `authenticatable_id`
+- `authenticatable_type`
+- `login_at`
+- `login_successful`
+- `ip_address`
+- `user_agent`
+- `location`
+- `logout_at`
+- `cleared_by_user`
 
-Handles multi-device logout events.
+The default migration does not create `created_at` or `updated_at`.
 
-Currently a placeholder for custom handling.
+### `authenticatable()`
 
-## Notifications
+Returns the morph-to relationship for the owning authenticatable model.
 
-### `Akira\LaravelAuthLogs\Notifications\AuthLogsNotification`
+### `getConnectionName(): string`
 
-Notification class for authentication events. Implements `ShouldQueue`.
+Uses `config('auth-logs.db_connection')`. If that value is `null`, falls back to `config('database.default')`.
 
-##### Constructor
-```php
-public function __construct(Template $template)
-```
+### `getTable(): string`
 
-##### `via()`
-```php
-public function via(mixed $notifiable): array
-```
-Returns notification channels from the notifiable's `notifyAuthenticationLogVia()` method.
+Uses `config('auth-logs.table_name')`.
 
-##### `toMail()`
-```php
-public function toMail(mixed $notifiable): MailMessage
-```
-Delegates to the template's `toMail()` method.
+### Casts
 
-## Templates
+- `login_at` to `datetime`
+- `login_successful` to `boolean`
+- `logout_at` to `datetime`
+- `cleared_by_user` to `boolean`
+- `location` to `array`
 
-### `Akira\LaravelAuthLogs\Templates\NewDevice`
+## Action: `CreateAuthenticationLog`
 
-Template for new device login notifications.
+Namespace: `Akira\LaravelAuthLogs\Actions\CreateAuthenticationLog`
 
-##### Constructor
+### `for(Authenticatable $authenticatable, bool $isSuccessFull = false): AuthenticationLog`
+
+Creates a log through `$authenticatable->authenticationLogs()`.
+
+Captured values:
+
+- `login_at` as `now()`
+- `ip_address` from `request()->ip()`
+- `user_agent` from `request()->userAgent()`
+- `location` from `request()->location`
+- `login_successful` from the second argument
+
+The authenticatable model must provide the `authenticationLogs()` relationship, normally by using `AuthLogs`.
+
+## Action: `Device`
+
+Namespace: `Akira\LaravelAuthLogs\Actions\Device`
+
+### `isKnownFor(Authenticatable $user, ?string $ip, ?string $userAgent): ?AuthenticationLog`
+
+Returns the first successful log for the same user, IP address, and user-agent. Returns `null` when no match exists.
+
+## Action: `GetLocation`
+
+Namespace: `Akira\LaravelAuthLogs\Actions\GetLocation`
+
+### `make(string $ip): Collection`
+
+Returns geolocation data as a collection. Returns an empty collection when lookup is disabled or fails.
+
+Endpoint behavior:
+
+- `file://` appends `/{ip}` and reads JSON from disk.
+- `data://` and `php://` are read directly.
+- other schemes append `/{ip}` and use `file_get_contents()` with a 5 second timeout for HTTP/HTTPS context.
+
+For non-file schemes, the decoded payload must have `status` equal to `success`.
+
+## Action: `SendNotification`
+
+Namespace: `Akira\LaravelAuthLogs\Actions\SendNotification`
+
+### `make(Authenticatable $authenticatable, string $template, AuthenticationLog $log): self`
+
+Creates a sender for the notifiable model, template class-string, and log.
+
+### `send(): void`
+
+Validates the inputs, verifies that the template class implements `ToMail`, and sends `AuthLogsNotification` through the authenticatable model's `notify()` method.
+
+Throws `RuntimeException` for missing inputs or invalid template contracts.
+
+## Listener: `LoginListener`
+
+Handles `Illuminate\Auth\Events\Login`.
+
+Behavior:
+
+- checks whether the current IP and user-agent are known for the user
+- creates a successful log
+- sends a new device notification when enabled, the device is unknown, and the user is not new
+
+## Listener: `FailedLoginListener`
+
+Handles `Illuminate\Auth\Events\Failed`.
+
+Behavior:
+
+- returns immediately when the event has no user
+- creates a failed log for an existing user
+- sends a failed login notification when enabled
+
+## Listener: `LogoutListener`
+
+Handles `Illuminate\Auth\Events\Logout`.
+
+Behavior:
+
+- returns when the event user does not have `registerLogout()`
+- otherwise updates the latest authentication log through `registerLogout()`
+
+## Listener: `OtherDeviceLogoutListener`
+
+Handles `Illuminate\Auth\Events\OtherDeviceLogout`.
+
+The default class is empty and exists as a customization hook.
+
+## Notification: `AuthLogsNotification`
+
+Namespace: `Akira\LaravelAuthLogs\Notifications\AuthLogsNotification`
+
+Final queued Laravel notification for mail delivery.
+
+### Constructor
+
 ```php
 public function __construct(
-    string $loginAt,
-    string $ipAddress,
-    string $location,
-    string $userAgent
+    ToMail|string $template,
+    ?AuthenticationLog $log = null,
 )
 ```
 
-##### `toMail()`
-```php
-public function toMail(mixed $notifiable): MailMessage
-```
-Returns a MailMessage with new device notification content.
+`$template` can be an already-built `ToMail` instance or a class-string implementing `ToMail`. When a class-string is used, `$log` is required so the template can be resolved later with login date, IP address, location, and user-agent.
 
-### `Akira\LaravelAuthLogs\Templates\FailedLogin`
+### `via(mixed $notifiable): array`
 
-Template for failed login attempt notifications.
+Reads channels from `$notifiable->notifyAuthenticationLogVia()`. Only `mail` is accepted.
 
-##### Constructor
-```php
-public function __construct(
-    string $loginAt,
-    string $ipAddress,
-    string $location,
-    string $userAgent
-)
-```
+### `toMail(mixed $notifiable): MailMessage`
 
-##### `toMail()`
-```php
-public function toMail(mixed $notifiable): MailMessage
-```
-Returns a MailMessage with failed login notification content.
+Resolves the template and delegates mail rendering to `ToMail::toMail()`.
 
 ## Contracts
 
-### `Akira\LaravelAuthLogs\Contracts\Template`
+### `Template`
 
-Base interface for notification templates.
-
-```php
-interface Template
-{
-    public function __construct(
-        string $loginAt,
-        string $ipAddress,
-        string $location,
-        string $userAgent
-    );
-}
-```
-
-### `Akira\LaravelAuthLogs\Contracts\ToMail`
-
-Interface for email notification templates.
+Namespace: `Akira\LaravelAuthLogs\Contracts\Template`
 
 ```php
-interface ToMail extends Template
-{
-    public function toMail(mixed $notifiable): MailMessage;
-}
+public function __construct(
+    string $loginAt,
+    string $ipAddress,
+    string $location,
+    string $userAgent,
+);
 ```
 
-## Value Objects
+### `ToMail`
 
-### `Akira\LaravelAuthLogs\ValueObjects\Location`
+Namespace: `Akira\LaravelAuthLogs\Contracts\ToMail`
 
-Represents geolocation data.
-
-#### Properties
+Extends `Template` and requires:
 
 ```php
-public readonly string $city
-public readonly string $country
-public readonly string $timezone
-public readonly string $latitude
-public readonly string $longitude
-public readonly string $isoCode
+public function toMail(mixed $notifiable): MailMessage;
 ```
 
-#### Methods
+Built-in notification templates must implement this contract.
 
-##### `make()`
-```php
-public static function make(Collection $data): self
+## Templates
+
+### `NewDevice`
+
+Namespace: `Akira\LaravelAuthLogs\Templates\NewDevice`
+
+Mail template for unknown successful login devices.
+
+### `FailedLogin`
+
+Namespace: `Akira\LaravelAuthLogs\Templates\FailedLogin`
+
+Mail template for failed login attempts tied to an existing user.
+
+## Value Object: `Location`
+
+Namespace: `Akira\LaravelAuthLogs\ValueObjects\Location`
+
+Constructed from geolocation collection data. `getFullLocation()` returns `"City, Country"`.
+
+Properties:
+
+- `city`
+- `country`
+- `timezone`
+- `latitude`
+- `longitude`
+- `isoCode`
+
+## Command: `auth-logs:install`
+
+Publishes package configuration and migration files.
+
+```bash
+php artisan auth-logs:install
 ```
-Creates a Location instance from geolocation API response.
-
-##### `getFullLocation()`
-```php
-public function getFullLocation(): string
-```
-Returns formatted location string: "City, Country".
-
-## Commands
-
-### `php artisan auth-logs:install`
-
-Installation command that publishes configuration and migrations.
-
-**Signature:** `auth-logs:install`
-
-**Actions:**
-- Publishes `config/auth-logs.php`
-- Publishes migration file
-
-## Configuration Keys
-
-Reference for all `config/auth-logs.php` options:
-
-- `table_name` (string): Database table name
-- `date_format` (string): PHP date format for notifications
-- `geolocation_api` (string): Geolocation API endpoint
-- `db_connection` (string|null): Database connection name
-- `notification_via` (array): Notification channels
-- `events` (array): Laravel authentication event classes
-- `listeners` (array): Event listener classes
-- `templates` (array): Notification template configuration
-- `purge` (int|null): Log retention period in days
 
 ## Service Provider
 
-### `Akira\LaravelAuthLogs\LaravelAuthLogsServiceProvider`
+Namespace: `Akira\LaravelAuthLogs\LaravelAuthLogsServiceProvider`
 
-Package service provider. Automatically registers event listeners.
+Responsibilities:
 
-##### `configurePackage()`
-```php
-public function configurePackage(Package $package): void
-```
-Configures package resources and registers event listeners.
+- registers package config, views, translations, migration, and install command
+- guards against non-array `auth-logs` config values during package registration
+- subscribes configured auth events to configured listeners
 
 **Previous:** [Advanced Usage](05-advanced-usage.md) | **Next:** [Testing](07-testing.md)

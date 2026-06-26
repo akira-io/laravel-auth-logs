@@ -1,229 +1,134 @@
 # Usage
 
-Once installed and configured, the package automatically tracks authentication activity. This guide covers how to interact with authentication logs in your application.
+Once installed, Laravel Auth Logs listens to configured Laravel authentication events and writes records through the `AuthLogs` relationship on the authenticated model.
 
-## Basic Usage
+## Default Event Behavior
 
-### Automatic Logging
+After adding the `AuthLogs` trait to your authenticatable model:
 
-After adding the `AuthLogs` trait to your User model, these authentication events are logged automatically:
+- `Login` creates a successful authentication log.
+- `Failed` creates a failed authentication log when Laravel provides a user instance.
+- `Logout` updates the latest authentication log with `logout_at` and `cleared_by_user`.
+- `OtherDeviceLogout` is subscribed as a customization hook; the default listener does not write a log entry.
 
-- **Login**: Successful authentication attempts
-- **Failed Login**: Failed authentication attempts with incorrect credentials
-- **Logout**: User-initiated logouts
-
-The package also subscribes to `OtherDeviceLogout` as a customization hook. Its default listener does not write a log entry.
-
-### Accessing Authentication Logs
-
-Get all authentication logs for a user:
+## Access Logs
 
 ```php
-$user = Auth::user();
-$logs = $user->authenticationLogs;
+$user = auth()->user();
 
-foreach ($logs as $log) {
-    echo "Login at: {$log->login_at}";
-    echo "IP: {$log->ip_address}";
-    echo "Location: {$log->location['city']}, {$log->location['country']}";
-}
+$logs = $user->authenticationLogs()->get();
+$latest = $user->latestAuthentication;
 ```
 
-### Latest Authentication
-
-Get the most recent authentication log:
-
-```php
-$latestAuth = $user->latestAuthentication;
-
-if ($latestAuth) {
-    echo "Last login: {$latestAuth->login_at}";
-    echo "From: {$latestAuth->ip_address}";
-}
-```
+`authenticationLogs()` is a morph-many relationship ordered by latest `login_at`. `latestAuthentication()` returns the latest morph-one record.
 
 ## Helper Methods
 
-The `AuthLogs` trait provides convenient methods for common queries:
-
-### Last Login Time
-
 ```php
-$lastLogin = $user->lastLoginAt();
-// Returns: Carbon instance or null
-```
-
-### Last Successful Login Time
-
-```php
-$lastSuccessfulLogin = $user->lastSuccessfulLoginAt();
-// Returns: Carbon instance or null
-```
-
-### Last Login IP Address
-
-```php
-$lastIp = $user->lastLoginIp();
-// Returns: string or null
-```
-
-### Last Successful Login IP
-
-```php
-$lastSuccessfulIp = $user->lastSuccessfulLoginIp();
-// Returns: string or null
-```
-
-### Previous Login Time
-
-Get the login time before the most recent:
-
-```php
-$previousLogin = $user->previousLoginAt();
-// Returns: Carbon instance or null
-```
-
-### Previous Login IP
-
-```php
-$previousIp = $user->previousLoginIp();
-// Returns: string or null
-```
-
-### Check if User is New
-
-Determine if a user was created within the last minute:
-
-```php
-if ($user->isNew()) {
-    // User just registered
-}
-```
-
-### Register Logout
-
-Manually register a logout:
-
-```php
+$user->lastLoginAt();
+$user->lastSuccessfulLoginAt();
+$user->lastLoginIp();
+$user->lastSuccessfulLoginIp();
+$user->previousLoginAt();
+$user->previousLoginIp();
+$user->isNew();
 $user->registerLogout();
 ```
 
-This updates the latest authentication log with the logout time and marks it as cleared by the user.
+Important behavior:
 
-## Querying Logs
+- `isNew()` returns true when the model was created less than one minute ago.
+- `registerLogout()` updates the latest authentication log and returns the update result.
+- New device notifications are skipped for new users.
 
-### Filter by Success/Failure
+## Query Logs
 
 ```php
-// Successful logins only
 $successfulLogins = $user->authenticationLogs()
     ->where('login_successful', true)
     ->get();
 
-// Failed login attempts
 $failedAttempts = $user->authenticationLogs()
     ->where('login_successful', false)
     ->get();
-```
-
-### Filter by Date Range
-
-```php
-use Carbon\Carbon;
 
 $recentLogs = $user->authenticationLogs()
-    ->where('login_at', '>=', Carbon::now()->subDays(7))
+    ->where('login_at', '>=', now()->subDays(7))
     ->get();
-```
 
-### Filter by IP Address
-
-```php
 $logsFromIp = $user->authenticationLogs()
     ->where('ip_address', '192.168.1.1')
     ->get();
 ```
 
-### Filter by Device
+Device recognition uses exact IP address and user-agent matching against prior successful logs:
 
 ```php
-$logsFromDevice = $user->authenticationLogs()
-    ->where('user_agent', 'like', '%Chrome%')
-    ->get();
+use Akira\LaravelAuthLogs\Actions\Device;
+
+$known = Device::isKnownFor($user, request()->ip(), request()->userAgent());
 ```
 
 ## Authentication Log Model
 
-The `AuthenticationLog` model provides access to individual log records.
+`AuthenticationLog` stores:
 
-### Properties
+- `authenticatable_type` and `authenticatable_id`
+- `ip_address`
+- `user_agent`
+- `login_at`
+- `login_successful`
+- `logout_at`
+- `cleared_by_user`
+- `location`
 
-```php
-$log->id                      // Primary key
-$log->authenticatable_id      // User ID
-$log->authenticatable_type    // User model class
-$log->login_at                // Carbon instance
-$log->login_successful        // boolean
-$log->ip_address              // string
-$log->user_agent              // string
-$log->location                // array
-$log->logout_at               // Carbon instance or null
-$log->cleared_by_user         // boolean
-```
+The model is final and has `$timestamps = false`; the default migration does not create `created_at` or `updated_at`.
 
-### Relationship
+## Location Data
 
-Access the user from a log:
+`location` stores an array. When stored location contains `city` or `country`, notifications use it directly. Otherwise the package attempts a geolocation lookup during notification rendering.
 
-```php
-$user = $log->authenticatable;
-```
+If lookup fails, notification text uses `Unknown`.
 
-### Location Data
-
-The `location` field contains geolocation data:
+Example shape:
 
 ```php
-$log->location['city']       // City name
-$log->location['country']    // Country name
-$log->location['timezone']   // Timezone
-$log->location['lat']        // Latitude
-$log->location['lon']        // Longitude
+[
+    'city' => 'Porto',
+    'country' => 'Portugal',
+    'timezone' => 'Europe/Lisbon',
+    'lat' => 41.1496,
+    'lon' => -8.6109,
+]
 ```
-
-If geolocation lookup fails, the location array will be empty.
 
 ## Notification Channels
 
-Override the notification channels for a specific user:
+The default channel list comes from `notifyAuthenticationLogVia()`:
 
 ```php
-class User extends Authenticatable
+public function notifyAuthenticationLogVia(): array
 {
-    use Notifiable, AuthLogs;
-
-    public function notifyAuthenticationLogVia(): array
-    {
-        return ['mail'];
-    }
+    return ['mail'];
 }
 ```
 
-The built-in notification supports `mail`. Use a custom notification implementation before returning other channels.
+The built-in notification accepts only `mail`. Use custom listeners and a custom Laravel notification when another channel is required.
 
-## Disabling Automatic Notifications
-
-To disable notifications temporarily, set these in your `.env`:
+## Disable Built-in Notifications
 
 ```env
 AUTH_LOGS_NEW_DEVICE_NOTIFICATION=false
 AUTH_LOGS_FAILED_LOGIN_NOTIFICATION=false
 ```
 
-Or disable in code by overriding the config at runtime:
+Or at runtime:
 
 ```php
 config(['auth-logs.templates.new_device.notification' => false]);
+config(['auth-logs.templates.failed_login.notification' => false]);
 ```
+
+Disabling notifications does not disable log creation.
 
 **Previous:** [Configuration](02-configuration.md) | **Next:** [Notifications](04-notifications.md)
