@@ -109,4 +109,4 @@ Use [CHANGELOG.md](../CHANGELOG.md) to review behavior changes before upgrading.
 - database connection behavior
 - test/runtime requirements
 
-**Previous:** [Security](11-security.md) | **Next:** [FAQ](13-faq.md)
+**Previous:** [API Reference](09-api-reference.md) | **Next:** [Testing](11-testing.md)

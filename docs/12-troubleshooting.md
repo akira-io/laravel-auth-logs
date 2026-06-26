@@ -175,4 +175,4 @@ Before opening an issue:
 4. Include queue and mail error output for notification issues.
 5. Include a minimal reproduction when possible.
 
-**Previous:** [Testing](07-testing.md)
+**Previous:** [Testing](11-testing.md) | **Next:** [FAQ](13-faq.md)

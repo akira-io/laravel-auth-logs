@@ -67,15 +67,16 @@ Full documentation is available under [docs/](docs/README.md):
 - [Configuration](docs/02-configuration.md)
 - [Usage](docs/03-usage.md)
 - [Notifications](docs/04-notifications.md)
-- [Advanced Usage](docs/05-advanced-usage.md)
-- [API Reference](docs/06-api-reference.md)
-- [Testing](docs/07-testing.md)
-- [Troubleshooting](docs/08-troubleshooting.md)
-- [Architecture](docs/09-architecture.md)
-- [Data Flow](docs/10-data-flow.md)
-- [Security](docs/11-security.md)
-- [Operations](docs/12-operations.md)
+- [Architecture](docs/05-architecture.md)
+- [Data Flow](docs/06-data-flow.md)
+- [Security](docs/07-security.md)
+- [Advanced Usage](docs/08-advanced-usage.md)
+- [API Reference](docs/09-api-reference.md)
+- [Operations](docs/10-operations.md)
+- [Testing](docs/11-testing.md)
+- [Troubleshooting](docs/12-troubleshooting.md)
 - [FAQ](docs/13-faq.md)
+- [Roadmap](docs/14-roadmap.md)
 
 ## Testing
 
@@ -95,12 +96,12 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## Security Vulnerabilities
 
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
+Please review [our security policy](https://github.com/akira-io/laravel-auth-logs/security/policy) on how to report security vulnerabilities.
 
 ## Credits
 
 - [kid](https://github.com/akira-io)
-- [All Contributors](../../contributors)
+- [All Contributors](https://github.com/akira-io/laravel-auth-logs/contributors)
 
 ## License
 

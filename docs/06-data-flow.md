@@ -126,4 +126,4 @@ flowchart TD
 
 The host application should implement retention according to its privacy and compliance requirements.
 
-**Previous:** [Architecture](09-architecture.md) | **Next:** [Security](11-security.md)
+**Previous:** [Architecture](05-architecture.md) | **Next:** [Security](07-security.md)

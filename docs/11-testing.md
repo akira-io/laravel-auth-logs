@@ -164,4 +164,4 @@ The coverage command runs tests in parallel and Pest can randomize order. Tests 
 
 If a test only fails in one random order, rerun with the seed shown by Pest and isolate shared config or service-provider state.
 
-**Previous:** [API Reference](06-api-reference.md) | **Next:** [Troubleshooting](08-troubleshooting.md)
+**Previous:** [Operations](10-operations.md) | **Next:** [Troubleshooting](12-troubleshooting.md)

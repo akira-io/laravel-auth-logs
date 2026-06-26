@@ -112,4 +112,4 @@ This document outlines potential features and improvements for the Laravel Auth 
 - Laravel Jetstream team authentication tracking
 - Filament admin panel for log management
 
-**Next:** [Installation](01-installation.md)
+**Previous:** [FAQ](13-faq.md)

@@ -95,4 +95,4 @@ If no queue worker is running, log records are still written, but notification j
 5. Log in as a non-new user and check the database for a successful authentication log.
 6. Trigger a failed login for an existing user and check that a failed log is created.
 
-**Previous:** [Roadmap](00-roadmap.md) | **Next:** [Configuration](02-configuration.md)
+**Next:** [Configuration](02-configuration.md)
