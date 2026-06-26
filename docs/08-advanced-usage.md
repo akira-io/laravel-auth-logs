@@ -245,4 +245,4 @@ final readonly class AuthenticationLogPresenter
 }
 ```
 
-**Previous:** [Notifications](04-notifications.md) | **Next:** [API Reference](06-api-reference.md)
+**Previous:** [Security](07-security.md) | **Next:** [API Reference](09-api-reference.md)

@@ -69,4 +69,4 @@ composer test
 
 The gate includes style, Rector dry-run, PHPStan, type coverage, and full coverage.
 
-**Previous:** [Operations](12-operations.md)
+**Previous:** [Troubleshooting](12-troubleshooting.md) | **Next:** [Roadmap](14-roadmap.md)

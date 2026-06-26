@@ -195,4 +195,4 @@ Publish translations if you want to customize the built-in notification strings:
 php artisan vendor:publish --tag="laravel-auth-logs-translations"
 ```
 
-**Previous:** [Usage](03-usage.md) | **Next:** [Advanced Usage](05-advanced-usage.md)
+**Previous:** [Usage](03-usage.md) | **Next:** [Architecture](05-architecture.md)

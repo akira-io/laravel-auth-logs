@@ -120,4 +120,4 @@ The default migration stores authentication context in a single table:
 
 The table intentionally has no model timestamps. `login_at` is the primary event timestamp.
 
-**Previous:** [Troubleshooting](08-troubleshooting.md) | **Next:** [Data Flow](10-data-flow.md)
+**Previous:** [Notifications](04-notifications.md) | **Next:** [Data Flow](06-data-flow.md)

@@ -283,4 +283,4 @@ Responsibilities:
 - guards against non-array `auth-logs` config values during package registration
 - subscribes configured auth events to configured listeners
 
-**Previous:** [Advanced Usage](05-advanced-usage.md) | **Next:** [Testing](07-testing.md)
+**Previous:** [Advanced Usage](08-advanced-usage.md) | **Next:** [Operations](10-operations.md)

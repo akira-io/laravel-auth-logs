@@ -79,4 +79,4 @@ CSV, JSON, dashboard, and API exports should be considered sensitive. Avoid plac
 
 Follow the repository security policy in [SECURITY.md](../SECURITY.md). Do not open public issues for vulnerabilities.
 
-**Previous:** [Data Flow](10-data-flow.md) | **Next:** [Operations](12-operations.md)
+**Previous:** [Data Flow](06-data-flow.md) | **Next:** [Advanced Usage](08-advanced-usage.md)
