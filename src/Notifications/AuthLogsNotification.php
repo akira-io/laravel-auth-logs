@@ -4,25 +4,38 @@ declare(strict_types=1);
 
 namespace Akira\LaravelAuthLogs\Notifications;
 
+use Akira\LaravelAuthLogs\AuthenticationLog;
+use Akira\LaravelAuthLogs\Concerns\InteractsWithLogs;
 use Akira\LaravelAuthLogs\Contracts\Template;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Queue\SerializesModels;
 use RuntimeException;
 
 final class AuthLogsNotification extends Notification implements ShouldQueue
 {
+    use InteractsWithLogs;
     use Queueable;
+    use SerializesModels;
+
+    private AuthenticationLog $log;
+
+    private bool $hasDeferredLog;
 
     /**
-     * Create a new notification instance.
+     * @phpstan-param Template|string $template
      */
-    public function __construct(private readonly Template $template) {}
+    public function __construct(
+        private Template|string $template,
+        ?AuthenticationLog $log = null,
+    ) {
+        $this->log = $log ?? new AuthenticationLog();
+        $this->hasDeferredLog = $log instanceof AuthenticationLog;
+    }
 
     /**
-     * Get the notification's delivery channels.
-     *
      * @return array<string>
      */
     public function via(mixed $notifiable): array
@@ -45,11 +58,42 @@ final class AuthLogsNotification extends Notification implements ShouldQueue
     }
 
     /**
-     * Get the mail representation of the notification.
+     * @throws RuntimeException
      */
     public function toMail(mixed $notifiable): MailMessage
     {
 
-        return $this->template->toMail($notifiable);
+        return $this->resolveTemplate()->toMail($notifiable);
+    }
+
+    /**
+     * @throws RuntimeException
+     */
+    private function resolveTemplate(): Template
+    {
+
+        if ($this->template instanceof Template) {
+            return $this->template;
+        }
+
+        if (! $this->hasDeferredLog) {
+            throw new RuntimeException('Authentication log is required to build deferred auth log notification template.');
+        }
+
+        $template = app(
+            abstract  : $this->template,
+            parameters: [
+                'loginAt' => $this->getLoginAt(),
+                'ipAddress' => $this->getIpAddress(),
+                'location' => $this->getFullLocation(),
+                'userAgent' => $this->getUserAgent(),
+            ],
+        );
+
+        if (! $template instanceof Template) {
+            throw new RuntimeException('Auth log notification template must implement the template contract.');
+        }
+
+        return $template;
     }
 }

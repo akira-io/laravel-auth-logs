@@ -15,7 +15,7 @@ final readonly class SendNotification
     use InteractsWithLogs;
 
     /**
-     * Send notification to the user.
+     * @phpstan-param string $template
      */
     public function __construct(
         private Authenticatable $authenticatable,
@@ -24,7 +24,7 @@ final readonly class SendNotification
     ) {}
 
     /**
-     * Create a new instance of the class.
+     * @phpstan-param string $template
      */
     public static function make(Authenticatable $authenticatable, string $template, AuthenticationLog $log): self
     {
@@ -33,20 +33,22 @@ final readonly class SendNotification
     }
 
     /**
-     * Send the notification.
+     * @throws RuntimeException
      */
     public function send(): void
     {
 
         $this->validateProperties();
 
-        $notification = $this->buildNotification();
-
-        $this->authenticatable->notify($notification); // @phpstan-ignore-line
+        /** @phpstan-ignore-next-line */
+        $this->authenticatable->notify(new AuthLogsNotification(
+            template: $this->template,
+            log     : $this->log,
+        ));
     }
 
     /**
-     * Validate the properties.
+     * @throws RuntimeException
      */
     private function validateProperties(): void
     {
@@ -62,24 +64,5 @@ final readonly class SendNotification
         if (! isset($this->log)) {
             throw new RuntimeException('Authentication log is required'); // @codeCoverageIgnoreLine
         }
-    }
-
-    /**
-     * Build the notification.
-     */
-    private function buildNotification(): AuthLogsNotification
-    {
-
-        return new AuthLogsNotification(
-            template: app(
-                abstract  : $this->template,
-                parameters: [
-                    'loginAt' => $this->getLoginAt(),
-                    'ipAddress' => $this->getIpAddress(),
-                    'location' => $this->getFullLocation(),
-                    'userAgent' => $this->getUserAgent(),
-                ],
-            ),
-        );
     }
 }

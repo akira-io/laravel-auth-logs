@@ -10,6 +10,7 @@ use Akira\LaravelAuthLogs\AuthenticationLog;
 use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
 use Akira\LaravelAuthLogs\Templates\NewDevice;
 use Akira\LaravelAuthLogs\Tests\Fixtures\User;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Notification;
 
 it('creates an authentication log via action', function (): void {
@@ -106,6 +107,72 @@ it('uses a stored resolved location without another lookup', function (): void {
     expect($sender->getFullLocation())->toBe('Porto, Portugal');
 });
 
+it('defers location lookup until the notification mail is rendered', function (): void {
+    config()->set('auth-logs.db_connection', 'testing');
+    $fixtures = realpath(__DIR__.'/../Fixtures') ?: realpath(__DIR__.'/../fixtures');
+    config()->set('auth-logs.geolocation_api', 'file://'.$fixtures);
+
+    Notification::fake();
+
+    $user = User::create([
+        'email' => 'deferred-location@example.test',
+        'created_at' => now()->subMinutes(10),
+        'updated_at' => now()->subMinutes(10),
+    ]);
+
+    request()->server->set('REMOTE_ADDR', '1.1.1.1');
+    request()->headers->set('User-Agent', 'UA/deferred');
+    request()->merge(['location' => []]);
+
+    $log = CreateAuthenticationLog::for($user, true);
+
+    SendNotification::make($user, NewDevice::class, $log)->send();
+
+    expect($log->fresh()->location)->toBe([]);
+
+    Notification::assertSentTo(
+        $user,
+        AuthLogsNotification::class,
+        function (AuthLogsNotification $notification) use ($user, $log): bool {
+            expect($log->fresh()->location)->toBe([]);
+
+            $notification->toMail($user);
+
+            expect($log->fresh()->location)->toHaveKey('city', 'Emerald City');
+
+            return true;
+        },
+    );
+});
+
+it('requires an authentication log for deferred notification templates', function (): void {
+    $notification = new AuthLogsNotification(NewDevice::class);
+    $user = new User(['email' => 'missing-log@example.test']);
+
+    expect(fn (): MailMessage => $notification->toMail($user))
+        ->toThrow(RuntimeException::class, 'Authentication log is required to build deferred auth log notification template.');
+});
+
+it('rejects deferred notification templates without the template contract', function (): void {
+    config()->set('auth-logs.db_connection', 'testing');
+
+    $user = User::create([
+        'email' => 'invalid-template@example.test',
+        'created_at' => now()->subMinutes(10),
+        'updated_at' => now()->subMinutes(10),
+    ]);
+
+    request()->server->set('REMOTE_ADDR', '1.1.1.3');
+    request()->headers->set('User-Agent', 'UA/invalid-template');
+    request()->merge(['location' => []]);
+
+    $log = CreateAuthenticationLog::for($user, true);
+    $notification = new AuthLogsNotification(stdClass::class, $log);
+
+    expect(fn (): MailMessage => $notification->toMail($user))
+        ->toThrow(RuntimeException::class, 'Auth log notification template must implement the template contract.');
+});
+
 it('returns empty collection when geolocation fails', function (): void {
     config()->set('auth-logs.geolocation_api', 'file:///path/does/not/exist');
 
@@ -136,28 +203,28 @@ it('validates send notification properties', function (): void {
     request()->merge(['location' => []]);
     $log = CreateAuthenticationLog::for($user, false);
 
-    $ref = new \ReflectionClass(SendNotification::class);
+    $ref = new ReflectionClass(SendNotification::class);
     $ctor = $ref->getConstructor();
     $instance = $ref->newInstanceWithoutConstructor();
     $ctor->invoke($instance, $user, '', $log);
 
-    $method = new \ReflectionMethod($instance, 'send');
+    $method = new ReflectionMethod($instance, 'send');
 
     expect(fn (): mixed => $method->invoke($instance))
         ->toThrow(RuntimeException::class);
 
     $noAuth = $ref->newInstanceWithoutConstructor();
-    $sendNoAuth = new \ReflectionMethod($noAuth, 'send');
+    $sendNoAuth = new ReflectionMethod($noAuth, 'send');
     expect(fn (): mixed => $sendNoAuth->invoke($noAuth))
         ->toThrow(RuntimeException::class);
 
     $missingLog = $ref->newInstanceWithoutConstructor();
-    $pa = new \ReflectionProperty(SendNotification::class, 'authenticatable');
-    $pt = new \ReflectionProperty(SendNotification::class, 'template');
+    $pa = new ReflectionProperty(SendNotification::class, 'authenticatable');
+    $pt = new ReflectionProperty(SendNotification::class, 'template');
     $pa->setValue($missingLog, $user);
     $pt->setValue($missingLog, NewDevice::class);
 
-    $sendMissingLog = new \ReflectionMethod($missingLog, 'send');
+    $sendMissingLog = new ReflectionMethod($missingLog, 'send');
     expect(fn (): mixed => $sendMissingLog->invoke($missingLog))
         ->toThrow(RuntimeException::class);
 });
