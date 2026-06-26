@@ -20,6 +20,18 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 final class LaravelAuthLogsServiceProvider extends PackageServiceProvider
 {
+    /** @throws BindingResolutionException */
+    public function registeringPackage(): void
+    {
+        $config = $this->app->make('config');
+
+        if (is_array($config->get('auth-logs', []))) {
+            return;
+        }
+
+        $config->set('auth-logs', []);
+    }
+
     /**
      * Configure the package's behavior, such as its name, configuration, views,
      * migrations, and custom commands. Additionally, register event listeners
