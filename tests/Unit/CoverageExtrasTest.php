@@ -9,6 +9,7 @@ use Akira\LaravelAuthLogs\AuthenticationLog;
 use Akira\LaravelAuthLogs\Facades\LaravelAuthLogs;
 use Akira\LaravelAuthLogs\Listeners\FailedLoginListener;
 use Akira\LaravelAuthLogs\Listeners\LogoutListener;
+use Akira\LaravelAuthLogs\LaravelAuthLogsServiceProvider;
 use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
 use Akira\LaravelAuthLogs\Templates\NewDevice;
 use Akira\LaravelAuthLogs\Tests\Fixtures\User;
@@ -22,6 +23,16 @@ it('facade accessor returns underlying class', function (): void {
     $m = $ref->getMethod('getFacadeAccessor');
     $result = $m->invoke(null);
     expect($result)->toBe(Akira\LaravelAuthLogs\LaravelAuthLogs::class);
+});
+
+it('normalizes scalar auth logs configuration before package registration', function (): void {
+
+    config()->set('auth-logs', 1);
+
+    $provider = new LaravelAuthLogsServiceProvider($this->app);
+    $provider->registeringPackage();
+
+    expect(config('auth-logs'))->toBe([]);
 });
 
 it('logout listener handle executes', function (): void {

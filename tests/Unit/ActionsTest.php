@@ -7,6 +7,7 @@ use Akira\LaravelAuthLogs\Actions\Device;
 use Akira\LaravelAuthLogs\Actions\GetLocation;
 use Akira\LaravelAuthLogs\Actions\SendNotification;
 use Akira\LaravelAuthLogs\AuthenticationLog;
+use Akira\LaravelAuthLogs\Contracts\Template;
 use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
 use Akira\LaravelAuthLogs\Templates\NewDevice;
 use Akira\LaravelAuthLogs\Tests\Fixtures\User;
@@ -170,7 +171,35 @@ it('rejects deferred notification templates without the template contract', func
     $notification = new AuthLogsNotification(stdClass::class, $log);
 
     expect(fn (): MailMessage => $notification->toMail($user))
-        ->toThrow(RuntimeException::class, 'Auth log notification template must implement the template contract.');
+        ->toThrow(RuntimeException::class, 'Auth log notification template must implement the mail template contract.');
+});
+
+it('rejects notification templates that cannot render mail', function (): void {
+    config()->set('auth-logs.db_connection', 'testing');
+
+    $user = User::create([
+        'email' => 'template-contract@example.test',
+        'created_at' => now()->subMinutes(10),
+        'updated_at' => now()->subMinutes(10),
+    ]);
+
+    request()->server->set('REMOTE_ADDR', '1.1.1.3');
+    request()->headers->set('User-Agent', 'UA/template-contract');
+    request()->merge(['location' => []]);
+
+    $log = CreateAuthenticationLog::for($user, true);
+    $template = new readonly class('', '', '', '') implements Template
+    {
+        public function __construct(
+            string $loginAt,
+            string $ipAddress,
+            string $location,
+            string $userAgent,
+        ) {}
+    };
+
+    expect(fn (): mixed => SendNotification::make($user, $template::class, $log)->send())
+        ->toThrow(RuntimeException::class, 'Auth log notification template must implement the mail template contract.');
 });
 
 it('returns empty collection when geolocation fails', function (): void {

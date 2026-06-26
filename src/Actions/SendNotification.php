@@ -6,6 +6,7 @@ namespace Akira\LaravelAuthLogs\Actions;
 
 use Akira\LaravelAuthLogs\AuthenticationLog;
 use Akira\LaravelAuthLogs\Concerns\InteractsWithLogs;
+use Akira\LaravelAuthLogs\Contracts\ToMail;
 use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
 use Illuminate\Contracts\Auth\Authenticatable;
 use RuntimeException;
@@ -39,10 +40,11 @@ final readonly class SendNotification
     {
 
         $this->validateProperties();
+        $template = $this->getTemplateClass();
 
         /** @phpstan-ignore-next-line */
         $this->authenticatable->notify(new AuthLogsNotification(
-            template: $this->template,
+            template: $template,
             log     : $this->log,
         ));
     }
@@ -64,5 +66,19 @@ final readonly class SendNotification
         if (! isset($this->log)) {
             throw new RuntimeException('Authentication log is required'); // @codeCoverageIgnoreLine
         }
+    }
+
+    /**
+     * @return class-string<ToMail>
+     *
+     * @throws RuntimeException
+     */
+    private function getTemplateClass(): string
+    {
+        if (! is_a($this->template, ToMail::class, true)) {
+            throw new RuntimeException('Auth log notification template must implement the mail template contract.');
+        }
+
+        return $this->template;
     }
 }

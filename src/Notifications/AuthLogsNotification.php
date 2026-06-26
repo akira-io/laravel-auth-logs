@@ -6,7 +6,7 @@ namespace Akira\LaravelAuthLogs\Notifications;
 
 use Akira\LaravelAuthLogs\AuthenticationLog;
 use Akira\LaravelAuthLogs\Concerns\InteractsWithLogs;
-use Akira\LaravelAuthLogs\Contracts\Template;
+use Akira\LaravelAuthLogs\Contracts\ToMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -25,10 +25,10 @@ final class AuthLogsNotification extends Notification implements ShouldQueue
     private bool $hasDeferredLog;
 
     /**
-     * @phpstan-param Template|string $template
+     * @phpstan-param ToMail|class-string<ToMail> $template
      */
     public function __construct(
-        private Template|string $template,
+        private ToMail|string $template,
         ?AuthenticationLog $log = null,
     ) {
         $this->log = $log ?? new AuthenticationLog();
@@ -69,10 +69,10 @@ final class AuthLogsNotification extends Notification implements ShouldQueue
     /**
      * @throws RuntimeException
      */
-    private function resolveTemplate(): Template
+    private function resolveTemplate(): ToMail
     {
 
-        if ($this->template instanceof Template) {
+        if ($this->template instanceof ToMail) {
             return $this->template;
         }
 
@@ -90,8 +90,8 @@ final class AuthLogsNotification extends Notification implements ShouldQueue
             ],
         );
 
-        if (! $template instanceof Template) {
-            throw new RuntimeException('Auth log notification template must implement the template contract.');
+        if (! $template instanceof ToMail) {
+            throw new RuntimeException('Auth log notification template must implement the mail template contract.');
         }
 
         return $template;
