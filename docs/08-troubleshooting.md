@@ -1,287 +1,135 @@
 # Troubleshooting
 
-Common issues and solutions when working with Laravel Auth Logs.
+Use this guide to diagnose common installation, logging, notification, geolocation, and test issues.
 
-## Installation Issues
+## Migration File Not Found
 
-### Migration File Not Found
+Run the install command again:
 
-**Problem:** Running `php artisan migrate` shows no migration file.
-
-**Solution:**
 ```bash
-# Re-run the installation command
 php artisan auth-logs:install
-
-# Check if migration was published
-ls database/migrations/*laravel_auth_logs*
-
-# Manually publish migrations if needed
-php artisan vendor:publish --tag="auth-logs-migrations"
 ```
 
-### Config File Not Found
+Then check that the migration exists and run migrations:
 
-**Problem:** Configuration values are not being recognized.
-
-**Solution:**
-```bash
-# Clear config cache
-php artisan config:clear
-
-# Republish config
-php artisan vendor:publish --tag="auth-logs-config" --force
-
-# Verify file exists
-ls config/auth-logs.php
-```
-
-### Table Already Exists Error
-
-**Problem:** Migration fails with "table already exists" error.
-
-**Solution:**
-```bash
-# Check if table exists
-php artisan db:show
-
-# Drop the table if needed
-php artisan tinker
->>> Schema::dropIfExists('authentication_logs');
-
-# Or use a fresh migration
-php artisan migrate:fresh
-```
-
-## Logging Issues
-
-### Logs Not Being Created
-
-**Problem:** Authentication events are not being logged.
-
-**Checklist:**
-1. Verify the `AuthLogs` trait is added to your User model:
-```php
-use Akira\LaravelAuthLogs\Concerns\AuthLogs;
-
-class User extends Authenticatable
-{
-    use AuthLogs;
-}
-```
-
-2. Check that the migration has been run:
 ```bash
 php artisan migrate:status
+php artisan migrate
 ```
 
-3. Verify event listeners are registered:
+## Config Values Are Not Applied
+
+Clear cached configuration:
+
 ```bash
-php artisan event:list | grep -i login
-```
-
-4. Check database connection configuration:
-```php
-// config/auth-logs.php
-'db_connection' => env('AUTH_LOGS_DB_CONNECTION', env('DB_CONNECTION')),
-```
-
-### Wrong Table Name
-
-**Problem:** Logs are being written to the wrong table or table not found.
-
-**Solution:**
-```php
-// config/auth-logs.php
-'table_name' => 'authentication_logs', // Verify this matches your migration
-
-// Clear cache after changing
 php artisan config:clear
 ```
 
-### Polymorphic Relationship Issues
+Confirm `config/auth-logs.php` exists and that the app is reading the expected environment:
 
-**Problem:** Cannot retrieve user from authentication log.
-
-**Solution:**
-```php
-// Ensure your User model namespace is correct
-$log->authenticatable; // Should return User instance
-
-// Check the authenticatable_type column contains correct class name
-// Should be: App\Models\User (not User)
+```bash
+php artisan tinker
+>>> config('auth-logs.table_name')
 ```
 
-## Notification Issues
+## Logs Are Not Created
 
-### Notifications Not Being Sent
+Check:
 
-**Problem:** Email notifications are not arriving.
+1. The authenticatable model uses `Akira\LaravelAuthLogs\Concerns\AuthLogs`.
+2. The configured migration has run.
+3. The service provider is registered through package auto-discovery.
+4. The event is configured in `auth-logs.events`.
+5. The event listener is configured in `auth-logs.listeners`.
 
-**Checklist:**
+List registered events:
 
-1. Verify queue is running:
+```bash
+php artisan event:list
+```
+
+## Failed Logins Are Not Logged
+
+`FailedLoginListener` only logs failed attempts when the Laravel `Failed` event contains a user instance. If the credentials do not resolve to a user, the listener returns without writing a log.
+
+## Logout Is Not Marked
+
+`LogoutListener` calls `registerLogout()` only when the event user has that method. Confirm the model uses `AuthLogs`.
+
+`OtherDeviceLogoutListener` is empty by default. Add a custom listener if your application needs behavior for "log out other devices".
+
+## Notifications Are Not Delivered
+
+Check:
+
+1. The model uses `Illuminate\Notifications\Notifiable`.
+2. The relevant notification toggle is true.
+3. `notifyAuthenticationLogVia()` returns `['mail']`.
+4. Mail configuration is valid.
+5. A queue worker is running.
+6. Failed jobs do not contain the notification.
+
+Commands:
+
 ```bash
 php artisan queue:work
+php artisan queue:failed
 ```
 
-2. Check notification configuration:
+## Unsupported Notification Channel Error
+
+The built-in notification supports only `mail`. Returning another channel causes:
+
+```text
+Laravel Auth Logs only supports the mail notification channel by default.
+```
+
+Use custom listeners and your own notification class for Slack, SMS, database, push, or other channels.
+
+## Template Contract Error
+
+Built-in templates must implement `Akira\LaravelAuthLogs\Contracts\ToMail`.
+
+Check the configured template:
+
 ```php
-// config/auth-logs.php
 'templates' => [
     'new_device' => [
-        'notification' => env('AUTH_LOGS_NEW_DEVICE_NOTIFICATION', true),
+        'template' => \App\Notifications\AuthLogs\SecurityNewDevice::class,
     ],
 ],
 ```
 
-3. Verify `.env` settings:
-```env
-AUTH_LOGS_NEW_DEVICE_NOTIFICATION=true
-AUTH_LOGS_FAILED_LOGIN_NOTIFICATION=true
-```
+The class must accept `loginAt`, `ipAddress`, `location`, and `userAgent` constructor strings and implement `toMail()`.
 
-4. Check mail configuration:
-```bash
-php artisan tinker
->>> Mail::raw('Test', function($message) { $message->to('test@example.com')->subject('Test'); });
-```
+## Geolocation Is Empty
 
-5. Inspect failed jobs:
-```bash
-php artisan queue:failed
-```
+Empty geolocation is expected when:
 
-### Notifications Sent for New Users
+- `auth-logs.geolocation_api` is `null` or empty
+- the endpoint cannot be reached
+- the endpoint returns invalid JSON
+- a non-file endpoint returns a status other than `success`
+- the IP is local, private, proxied, or blocked by the provider
 
-**Problem:** New device notifications sent immediately after registration.
+For notifications, empty geolocation renders as `Unknown`.
 
-**Explanation:** This is expected behavior. The package skips notifications for users created within the last minute using the `isNew()` method.
+## Login Becomes Slow
 
-**Workaround:** If you need different behavior, override in your User model:
-```php
-public function isNew(): bool
-{
-    return $this->created_at->diffInMinutes(now()) < 5; // 5 minutes instead of 1
-}
-```
+Log creation is database work on the request path. Built-in notification mail is queued, but location resolution can happen while the queued notification is rendered.
 
-### Duplicate Notifications
+For high-traffic apps:
 
-**Problem:** Multiple notification emails are being sent for one login.
+- run queue workers separately from web requests
+- consider disabling built-in geolocation
+- provide location data from your own middleware
+- add indexes for your query patterns
+- purge or archive old logs
 
-**Causes:**
-1. Multiple queue workers processing the same job
-2. Event listeners registered multiple times
+## Table Is Too Large
 
-**Solution:**
-```bash
-# Restart queue workers
-php artisan queue:restart
+The package does not purge records automatically. Schedule cleanup in the host application:
 
-# Clear cached events
-php artisan event:clear
-php artisan config:clear
-
-# Check for duplicate listener registrations in your EventServiceProvider
-```
-
-## Geolocation Issues
-
-### Location Data Not Populated
-
-**Problem:** The `location` field is empty or null.
-
-**Checklist:**
-
-1. Verify the geolocation API is reachable:
-```bash
-curl http://ip-api.com/json/8.8.8.8
-```
-
-2. Check if your server can make outbound HTTP requests:
-```php
-// Test in tinker
-php artisan tinker
->>> file_get_contents('http://ip-api.com/json/8.8.8.8');
-```
-
-3. For localhost testing, location data won't work with `127.0.0.1`. Use a real IP:
-```php
-// In tests, mock the request location
-$request->location = ['city' => 'Test', 'country' => 'Test'];
-```
-
-4. Check firewall/proxy settings that might block outbound requests.
-
-### Alternative Geolocation Provider
-
-**Problem:** Need to use a different geolocation service.
-
-**Solution:**
-```php
-// Create middleware to set custom location
-namespace App\Http\Middleware;
-
-class SetCustomLocation
-{
-    public function handle($request, $next)
-    {
-        $ip = $request->ip();
-        
-        // Use your preferred service
-        $location = YourGeoService::lookup($ip);
-        
-        $request->location = [
-            'city' => $location->city,
-            'country' => $location->country,
-            'lat' => $location->latitude,
-            'lon' => $location->longitude,
-            'timezone' => $location->timezone,
-        ];
-        
-        return $next($request);
-    }
-}
-```
-
-## Performance Issues
-
-### Slow Login Performance
-
-**Problem:** Login process has become noticeably slower.
-
-**Solutions:**
-
-1. Ensure notifications are queued (default behavior):
-```php
-// Verify AuthLogsNotification implements ShouldQueue
-class AuthLogsNotification extends Notification implements ShouldQueue
-```
-
-2. Add database indexes:
-```php
-// Create a migration
-Schema::table('authentication_logs', function (Blueprint $table) {
-    $table->index(['authenticatable_type', 'authenticatable_id']);
-    $table->index('login_at');
-    $table->index(['ip_address', 'user_agent']);
-});
-```
-
-3. Disable geolocation for high-traffic applications:
-```php
-// config/auth-logs.php
-'geolocation_api' => null, // Disable
-```
-
-### Large Database Table
-
-**Problem:** The authentication_logs table is consuming too much disk space.
-
-**Solutions:**
-
-1. Schedule cleanup in your application:
 ```php
 use Akira\LaravelAuthLogs\AuthenticationLog;
 
@@ -294,159 +142,37 @@ $schedule->call(function (): void {
 })->daily();
 ```
 
-2. Reduce retention period:
-```php
-// config/auth-logs.php
-'purge' => 90, // Keep only 90 days instead of 365
-```
+## Composer Test Fails Without Coverage Driver
 
-3. Archive old logs:
-```php
-// Create custom command
-AuthenticationLog::where('login_at', '<', now()->subYear())
-    ->chunk(1000, function ($logs) {
-        Storage::append('archived-logs.json', $logs->toJson());
-        $logs->each->delete();
-    });
-```
+`composer test` runs `pest --parallel --coverage --exactly=100 --compact`. Install or enable a coverage driver such as Xdebug or PCOV.
 
-## Testing Issues
+With Herd PHP, a typical local command is:
 
-### Cannot Mock Notifications
-
-**Problem:** `Notification::fake()` not working in tests.
-
-**Solution:**
-```php
-use Illuminate\Support\Facades\Notification;
-
-public function setUp(): void
-{
-    parent::setUp();
-    Notification::fake(); // Call before any authentication
-}
-```
-
-### Database Not Refreshing
-
-**Problem:** Tests fail due to existing data.
-
-**Solution:**
-```php
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-class AuthLogTest extends TestCase
-{
-    use RefreshDatabase; // Ensures fresh database for each test
-}
-```
-
-### Time-based Tests Failing
-
-**Problem:** Tests involving `isNew()` are flaky.
-
-**Solution:**
-```php
-use Illuminate\Support\Facades\Date;
-
-public function test_new_user_detection()
-{
-    Date::setTestNow('2025-01-01 12:00:00');
-    
-    $user = User::factory()->create();
-    
-    $this->assertTrue($user->isNew());
-    
-    Date::setTestNow('2025-01-01 12:02:00'); // 2 minutes later
-    
-    $this->assertFalse($user->isNew());
-}
-```
-
-## Common Errors
-
-### `Call to undefined method authenticationLogs()`
-
-**Cause:** The `AuthLogs` trait is not added to the User model.
-
-**Solution:**
-```php
-use Akira\LaravelAuthLogs\Concerns\AuthLogs;
-
-class User extends Authenticatable
-{
-    use Notifiable, AuthLogs; // Add here
-}
-```
-
-### `Class 'NewDevice' not found`
-
-**Cause:** Template class cannot be resolved.
-
-**Solution:**
-```php
-// Verify the full class name in config
-'template' => \Akira\LaravelAuthLogs\Templates\NewDevice::class,
-
-// Clear config cache
-php artisan config:clear
-```
-
-### `SQLSTATE[42S02]: Base table or view not found`
-
-**Cause:** Migration has not been run.
-
-**Solution:**
 ```bash
-php artisan migrate
+PATH="/Users/kid/Library/Application Support/Herd/bin:$PATH" XDEBUG_MODE=coverage composer test
 ```
 
-### `Undefined property: authenticatable_id`
+## PHPStan Runs Out of Memory
 
-**Cause:** Using the wrong query method or model is not loaded.
+Increase PHP memory for the runtime running Composer and PHPStan. Herd PHP is configured with a higher memory limit in this workspace. Other runtimes may need a `memory_limit` update or a PHPStan `--memory-limit` option.
 
-**Solution:**
-```php
-// Always eager load the relationship when querying
-$logs = AuthenticationLog::with('authenticatable')->get();
+## Random Parallel Test Failure
 
-// Or access via user
-$user->authenticationLogs;
-```
+The suite runs in parallel for coverage. If a failure appears order-dependent:
 
-## Debug Mode
-
-Enable detailed logging for troubleshooting:
-
-```php
-// In a service provider or middleware
-\Log::info('Auth event triggered', [
-    'user_id' => $user->id,
-    'ip' => request()->ip(),
-    'user_agent' => request()->userAgent(),
-]);
-```
-
-Add to listeners:
-```php
-public function handle(Login $event): void
-{
-    \Log::debug('LoginListener triggered', [
-        'user' => $event->user->email,
-    ]);
-    
-    // existing code...
-}
-```
+1. rerun with the random seed printed by Pest
+2. check for mutated config that is not reset in the test
+3. check service-provider bootstrapping state
+4. rerun the full `composer test` gate after isolating the shared state
 
 ## Getting Help
 
-If you're still experiencing issues:
+Before opening an issue:
 
-1. Check the [GitHub Issues](https://github.com/akira-io/laravel-auth-logs/issues)
-2. Enable Laravel debug mode: `APP_DEBUG=true`
-3. Check Laravel logs: `storage/logs/laravel.log`
-4. Verify package version: `composer show akira/laravel-auth-logs`
-5. Clear all caches: `php artisan optimize:clear`
+1. Confirm your Laravel, PHP, and package versions.
+2. Include the relevant `auth-logs.php` config.
+3. Include the event/listener you expected to run.
+4. Include queue and mail error output for notification issues.
+5. Include a minimal reproduction when possible.
 
 **Previous:** [Testing](07-testing.md)

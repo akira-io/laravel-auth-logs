@@ -1,12 +1,21 @@
 # Advanced Usage
 
-This guide covers advanced scenarios and customization options for the authentication logging system.
+This guide covers extension points that are supported by the current package design.
 
 ## Custom Event Listeners
 
-Replace or extend the default event listeners to modify logging behavior.
+The service provider subscribes listeners from `config/auth-logs.php`. Replace a listener when you need application-specific behavior.
 
-### Creating a Custom Listener
+```php
+'listeners' => [
+    'login' => \App\Listeners\CustomLoginListener::class,
+    'failed' => \Akira\LaravelAuthLogs\Listeners\FailedLoginListener::class,
+    'logout' => \Akira\LaravelAuthLogs\Listeners\LogoutListener::class,
+    'other_device_logout' => \App\Listeners\CustomOtherDeviceLogoutListener::class,
+],
+```
+
+Example custom login listener:
 
 ```php
 <?php
@@ -14,57 +23,56 @@ Replace or extend the default event listeners to modify logging behavior.
 namespace App\Listeners;
 
 use Akira\LaravelAuthLogs\Actions\CreateAuthenticationLog;
+use Akira\LaravelAuthLogs\Actions\Device;
+use App\Notifications\SecurityTeamNotification;
 use Illuminate\Auth\Events\Login;
 
-class CustomLoginListener
+final class CustomLoginListener
 {
     public function handle(Login $event): void
     {
-        $user = $event->user;
+        $known = Device::isKnownFor(
+            $event->user,
+            request()->ip(),
+            request()->userAgent(),
+        );
 
-        // Create the log entry
-        $log = CreateAuthenticationLog::for($user, isSuccessFull: true);
+        $log = CreateAuthenticationLog::for($event->user, isSuccessFull: true);
 
-        // Your custom logic
-        if ($this->isSuspiciousLogin($user)) {
-            $this->alertSecurityTeam($user, $log);
+        if ($known === null) {
+            $event->user->notify(new SecurityTeamNotification($log));
         }
-
-        // Log to external service
-        $this->logToDatadog($user, $log);
-    }
-
-    private function isSuspiciousLogin($user): bool
-    {
-        // Check for suspicious patterns
-        return $user->authenticationLogs()
-            ->where('login_at', '>=', now()->subMinutes(5))
-            ->count() > 3;
     }
 }
 ```
 
-### Register the Custom Listener
+## Custom Other Device Logout Behavior
 
-Update the configuration:
+`OtherDeviceLogoutListener` is intentionally empty. Use it to add behavior when a user logs out other sessions:
 
 ```php
-// config/auth-logs.php
+<?php
 
-'listeners' => [
-    'login' => \App\Listeners\CustomLoginListener::class,
-    'failed' => \Akira\LaravelAuthLogs\Listeners\FailedLoginListener::class,
-    // ...
-],
+namespace App\Listeners;
+
+use Illuminate\Auth\Events\OtherDeviceLogout;
+
+final class CustomOtherDeviceLogoutListener
+{
+    public function handle(OtherDeviceLogout $event): void
+    {
+        logger()->info('User logged out other devices.', [
+            'user_id' => $event->user?->getAuthIdentifier(),
+        ]);
+    }
+}
 ```
 
-## Custom Actions
+## Direct Actions
 
-The package provides action classes that can be used independently or extended.
+Use package actions when a custom listener needs the same low-level behavior.
 
-### CreateAuthenticationLog
-
-Create authentication logs programmatically:
+### Create a Log
 
 ```php
 use Akira\LaravelAuthLogs\Actions\CreateAuthenticationLog;
@@ -72,15 +80,9 @@ use Akira\LaravelAuthLogs\Actions\CreateAuthenticationLog;
 $log = CreateAuthenticationLog::for($user, isSuccessFull: true);
 ```
 
-This action automatically captures:
-- Current timestamp
-- Request IP address
-- User agent
-- Location data from the request
+The action reads the current request IP, user agent, and `request()->location`.
 
-### SendNotification
-
-Send authentication notifications manually:
+### Send a Built-in Mail Notification
 
 ```php
 use Akira\LaravelAuthLogs\Actions\SendNotification;
@@ -89,13 +91,13 @@ use Akira\LaravelAuthLogs\Templates\NewDevice;
 SendNotification::make(
     authenticatable: $user,
     template: NewDevice::class,
-    log: $log
+    log: $log,
 )->send();
 ```
 
-### GetLocation
+The template class must implement `ToMail`.
 
-Fetch geolocation data for any IP address:
+### Resolve Location
 
 ```php
 use Akira\LaravelAuthLogs\Actions\GetLocation;
@@ -103,276 +105,142 @@ use Akira\LaravelAuthLogs\Actions\GetLocation;
 $location = GetLocation::make('8.8.8.8');
 
 if ($location->isNotEmpty()) {
-    echo $location['city'];
-    echo $location['country'];
+    $city = $location->get('city');
 }
 ```
 
-Returns an empty collection if the lookup fails.
+The action returns an empty collection when lookup is disabled, unavailable, invalid, or unsuccessful.
 
-### Device
-
-Check if a device is known for a user:
+### Detect Known Devices
 
 ```php
 use Akira\LaravelAuthLogs\Actions\Device;
 
-$knownDevice = Device::isKnownFor(
+$known = Device::isKnownFor(
     user: $user,
-    ip: '192.168.1.1',
-    userAgent: 'Mozilla/5.0...'
+    ip: request()->ip(),
+    userAgent: request()->userAgent(),
 );
-
-if ($knownDevice) {
-    // Device has been used before
-}
 ```
 
-## Custom Geolocation Provider
+The match is exact and only considers prior successful logs.
 
-Replace the default geolocation provider with your own.
+## Custom Geolocation
 
-### Using MaxMind GeoIP2
+You can provide location data before the package creates the log:
 
 ```php
-// Update config/auth-logs.php
-'geolocation_api' => null, // Disable default API
+request()->merge([
+    'location' => [
+        'city' => 'Porto',
+        'country' => 'Portugal',
+        'lat' => 41.1496,
+        'lon' => -8.6109,
+        'timezone' => 'Europe/Lisbon',
+    ],
+]);
 ```
 
-Create a middleware to attach location data:
+You can also disable the built-in lookup and handle geolocation yourself:
 
 ```php
-<?php
-
-namespace App\Http\Middleware;
-
-use Closure;
-use GeoIp2\Database\Reader;
-
-class AttachGeolocation
-{
-    public function handle($request, Closure $next)
-    {
-        try {
-            $reader = new Reader(storage_path('geoip/GeoLite2-City.mmdb'));
-            $record = $reader->city($request->ip());
-
-            $request->location = [
-                'city' => $record->city->name,
-                'country' => $record->country->name,
-                'lat' => $record->location->latitude,
-                'lon' => $record->location->longitude,
-                'timezone' => $record->location->timeZone,
-            ];
-        } catch (\Exception $e) {
-            $request->location = [];
-        }
-
-        return $next($request);
-    }
-}
+'geolocation_api' => null,
 ```
 
-Register the middleware in `app/Http/Kernel.php`.
+When notification rendering cannot resolve location data, the package uses `Unknown`.
 
 ## Multiple Authenticatable Models
 
-The package supports logging for any authenticatable model through polymorphic relationships.
-
-### Setup for Admin Model
+The log table uses a morph relationship, so multiple authenticatable models can use the trait.
 
 ```php
-<?php
-
-namespace App\Models;
-
 use Akira\LaravelAuthLogs\Concerns\AuthLogs;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Admin extends Authenticatable
+final class Admin extends Authenticatable
 {
-    use AuthLogs;
-
-    protected $guard = 'admin';
+    use Notifiable, AuthLogs;
 }
 ```
 
-### Query Logs by Model Type
+Query by model type:
 
 ```php
 use Akira\LaravelAuthLogs\AuthenticationLog;
 
-// All user logins
-$userLogs = AuthenticationLog::where('authenticatable_type', User::class)->get();
-
-// All admin logins
-$adminLogs = AuthenticationLog::where('authenticatable_type', Admin::class)->get();
-```
-
-## Rate Limiting Based on Failed Attempts
-
-Implement rate limiting using authentication logs:
-
-```php
-<?php
-
-namespace App\Http\Middleware;
-
-use Closure;
-use Illuminate\Support\Facades\RateLimiter;
-
-class ThrottleFailedLogins
-{
-    public function handle($request, Closure $next)
-    {
-        $key = 'login:' . $request->ip();
-
-        if (RateLimiter::tooManyAttempts($key, 5)) {
-            $seconds = RateLimiter::availableIn($key);
-            abort(429, "Too many attempts. Try again in {$seconds} seconds.");
-        }
-
-        return $next($request);
-    }
-}
-```
-
-Then in your login controller:
-
-```php
-use Illuminate\Support\Facades\RateLimiter;
-
-protected function sendFailedLoginResponse(Request $request)
-{
-    RateLimiter::hit('login:' . $request->ip(), 300); // 5 minutes
-    
-    return back()->withErrors([
-        'email' => 'Invalid credentials.',
-    ]);
-}
+$adminLogs = AuthenticationLog::query()
+    ->where('authenticatable_type', Admin::class)
+    ->get();
 ```
 
 ## Purging Old Logs
 
-Create a scheduled command to automatically purge old logs:
-
-```php
-<?php
-
-namespace App\Console\Commands;
-
-use Akira\LaravelAuthLogs\AuthenticationLog;
-use Carbon\Carbon;
-use Illuminate\Console\Command;
-
-class PurgeAuthLogs extends Command
-{
-    protected $signature = 'auth-logs:purge';
-    protected $description = 'Purge old authentication logs';
-
-    public function handle(): int
-    {
-        $days = config('auth-logs.purge', 365);
-        
-        $deleted = AuthenticationLog::where(
-            'login_at',
-            '<',
-            Carbon::now()->subDays($days)
-        )->delete();
-
-        $this->info("Deleted {$deleted} authentication logs.");
-
-        return self::SUCCESS;
-    }
-}
-```
-
-Schedule it in `app/Console/Kernel.php`:
-
-```php
-protected function schedule(Schedule $schedule)
-{
-    $schedule->command('auth-logs:purge')->daily();
-}
-```
-
-## Export Authentication Logs
-
-Create an export feature:
+The package provides a retention value but does not schedule cleanup. Add cleanup to your application:
 
 ```php
 use Akira\LaravelAuthLogs\AuthenticationLog;
-use Illuminate\Support\Facades\Response;
 
-public function exportUserLogs(User $user)
-{
-    $logs = $user->authenticationLogs()->get()->map(function ($log) {
-        return [
-            'timestamp' => $log->login_at->toDateTimeString(),
-            'success' => $log->login_successful ? 'Yes' : 'No',
-            'ip_address' => $log->ip_address,
-            'location' => $log->location['city'] ?? 'Unknown',
-            'user_agent' => $log->user_agent,
-        ];
-    });
+$schedule->call(function (): void {
+    $days = (int) config('auth-logs.purge', 365);
 
-    $csv = \League\Csv\Writer::createFromString('');
-    $csv->insertOne(['Timestamp', 'Success', 'IP Address', 'Location', 'User Agent']);
-    $csv->insertAll($logs->toArray());
+    AuthenticationLog::query()
+        ->where('login_at', '<', now()->subDays($days))
+        ->delete();
+})->dailyAt('03:00');
+```
 
-    return Response::make($csv->toString(), 200, [
-        'Content-Type' => 'text/csv',
-        'Content-Disposition' => 'attachment; filename="auth-logs.csv"',
+## Exporting Logs
+
+```php
+$rows = $user->authenticationLogs()
+    ->latest('login_at')
+    ->get()
+    ->map(fn ($log): array => [
+        'login_at' => $log->login_at?->toDateTimeString(),
+        'success' => $log->login_successful,
+        'ip_address' => $log->ip_address,
+        'user_agent' => $log->user_agent,
+        'location' => $log->location,
     ]);
-}
 ```
 
-## Dashboard Integration
+Authentication logs contain IP addresses, user agents, timestamps, and geolocation. Treat exports as sensitive data.
 
-Create a dashboard showing authentication statistics:
+## Dashboard Queries
 
 ```php
-use Akira\LaravelAuthLogs\AuthenticationLog;
-use Carbon\Carbon;
+$query = $user->authenticationLogs();
 
-public function getDashboardStats(User $user)
-{
-    $logs = $user->authenticationLogs();
-
-    return [
-        'total_logins' => $logs->where('login_successful', true)->count(),
-        'failed_attempts' => $logs->where('login_successful', false)->count(),
-        'unique_ips' => $logs->distinct('ip_address')->count(),
-        'last_login' => $user->lastSuccessfulLoginAt(),
-        'logins_this_week' => $logs->where('login_at', '>=', Carbon::now()->subWeek())->count(),
-        'unique_devices' => $logs->distinct('user_agent')->count(),
-    ];
-}
+$stats = [
+    'successful_logins' => (clone $query)->where('login_successful', true)->count(),
+    'failed_attempts' => (clone $query)->where('login_successful', false)->count(),
+    'unique_ips' => (clone $query)->distinct('ip_address')->count('ip_address'),
+    'last_successful_login' => $user->lastSuccessfulLoginAt(),
+];
 ```
 
-## Extending the AuthenticationLog Model
+For high-volume tables, add application migrations for the indexes your dashboards need.
 
-Create your own model extending the base model:
+## Extending the Model
+
+`AuthenticationLog` is final. Do not extend it. Prefer:
+
+- custom query objects
+- Eloquent scopes in application services
+- presenters or resources around `AuthenticationLog`
+- custom listeners that write additional application-owned records
+
+Example presenter:
 
 ```php
-<?php
-
-namespace App\Models;
-
-use Akira\LaravelAuthLogs\AuthenticationLog as BaseLog;
-
-class AuthenticationLog extends BaseLog
+final readonly class AuthenticationLogPresenter
 {
-    public function isFromMobile(): bool
-    {
-        return str_contains($this->user_agent, 'Mobile');
-    }
+    public function __construct(private AuthenticationLog $log) {}
 
     public function isSuspicious(): bool
     {
-        // Custom logic
-        return $this->login_at->isWeekend() && 
-               $this->login_at->hour < 6;
+        return $this->log->login_successful === false;
     }
 }
 ```

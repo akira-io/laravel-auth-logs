@@ -1,156 +1,76 @@
 # Notifications
 
-The package automatically sends email notifications for important authentication events. This guide explains how notifications work and how to customize them.
+Laravel Auth Logs sends queued mail notifications for two built-in events:
 
-## Built-in Notifications
+- new device login
+- failed login attempt
 
-### New Device Login
+Notifications are optional. Disabling them does not disable log creation.
 
-Triggered when a user successfully logs in from an unrecognized device (unique combination of IP address and user-agent).
+## New Device Login
 
-**When it's sent:**
-- User logs in successfully
-- The IP + user-agent combination has never been seen before
-- The user account is not newly created (older than 1 minute)
+A new device notification is sent when all conditions are true:
 
-**Email content includes:**
-- User email address
-- Login timestamp (UTC+0)
-- IP address
-- User agent (browser/device info)
-- Geolocation (city, country)
+- the user logs in successfully
+- the same user does not have a prior successful log with the same IP address and user-agent
+- the user is not considered new by `isNew()`
+- `auth-logs.templates.new_device.notification` is truthy
+- the configured template implements `ToMail`
 
-**Disable in `.env`:**
+The default mail includes account email, date, IP address, user agent, and location text.
+
+Disable it with:
+
 ```env
 AUTH_LOGS_NEW_DEVICE_NOTIFICATION=false
 ```
 
-### Failed Login Attempt
+## Failed Login Attempt
 
-Triggered when someone attempts to log in with incorrect credentials for an existing user account.
+A failed login notification is sent when all conditions are true:
 
-**When it's sent:**
-- Authentication fails (wrong password)
-- The user account exists
+- Laravel dispatches a failed login event with a user instance
+- `auth-logs.templates.failed_login.notification` is truthy
+- the configured template implements `ToMail`
 
-**Email content includes:**
-- User email address
-- Attempt timestamp (UTC+0)
-- IP address
-- User agent
-- Geolocation
+If the failed event has no user, the listener returns without creating a log or sending a notification.
 
-**Disable in `.env`:**
+Disable it with:
+
 ```env
 AUTH_LOGS_FAILED_LOGIN_NOTIFICATION=false
 ```
 
-## Notification Class
+## Delivery Channel
 
-All authentication notifications use the `AuthLogsNotification` class, which implements Laravel's `ShouldQueue` interface for asynchronous delivery.
-
-```php
-use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
-```
-
-The notification automatically determines delivery channels by calling the `notifyAuthenticationLogVia()` method on your User model.
-
-## Customizing Notification Channels
-
-### Per-User Channels
-
-Override the `notifyAuthenticationLogVia()` method in your User model:
+The built-in `AuthLogsNotification` supports only Laravel's `mail` channel.
 
 ```php
-class User extends Authenticatable
+public function notifyAuthenticationLogVia(): array
 {
-    use Notifiable, AuthLogs;
-
-    public function notifyAuthenticationLogVia(): array
-    {
-        // Different channels based on user preferences
-        $channels = ['mail'];
-
-        if ($this->sms_notifications_enabled) {
-            $channels[] = 'nexmo';
-        }
-
-        if ($this->slack_webhook) {
-            $channels[] = 'slack';
-        }
-
-        return $channels;
-    }
+    return ['mail'];
 }
 ```
 
-### Global Channels
+Returning any other channel from `notifyAuthenticationLogVia()` causes the built-in notification to throw a `RuntimeException`.
 
-Modify the configuration file:
+Use custom listeners and your own Laravel notification class for Slack, database, SMS, push, or any other channel.
 
-```php
-// config/auth-logs.php
+## Queue Behavior
 
-'notification_via' => ['mail', 'slack'],
+`AuthLogsNotification` implements `ShouldQueue`, so mail delivery is queued.
+
+Run a queue worker in any environment where notifications should be delivered:
+
+```bash
+php artisan queue:work
 ```
 
-## Custom Templates
+The authentication log is created before notification dispatch. If the queue is stopped, log creation still happens, but mail jobs may remain pending.
 
-Create custom notification templates by implementing the `ToMail` contract.
+## Template Contracts
 
-### Creating a Custom Template
-
-```php
-<?php
-
-namespace App\Notifications\AuthLogs;
-
-use Akira\LaravelAuthLogs\Contracts\ToMail;
-use Illuminate\Notifications\Messages\MailMessage;
-
-final readonly class CustomNewDevice implements ToMail
-{
-    public function __construct(
-        private string $loginAt,
-        private string $ipAddress,
-        private string $location,
-        private string $userAgent,
-    ) {}
-
-    public function toMail(mixed $notifiable): MailMessage
-    {
-        return (new MailMessage)
-            ->subject('Security Alert: New Device Login')
-            ->greeting("Hello {$notifiable->name}!")
-            ->line('We detected a login from a new device.')
-            ->line("**Time:** {$this->loginAt}")
-            ->line("**Location:** {$this->location}")
-            ->line("**IP:** {$this->ipAddress}")
-            ->line("**Device:** {$this->userAgent}")
-            ->action('Review Account Security', url('/profile/security'))
-            ->line('If this wasn\'t you, secure your account immediately.');
-    }
-}
-```
-
-### Register the Custom Template
-
-Update the configuration:
-
-```php
-// config/auth-logs.php
-
-'templates' => [
-    'new_device' => [
-        'notification' => true,
-        'template' => \App\Notifications\AuthLogs\CustomNewDevice::class,
-    ],
-],
-```
-
-## Template Contract
-
-All templates must implement the `Template` contract:
+`Template` defines the constructor data that the package injects:
 
 ```php
 interface Template
@@ -164,7 +84,7 @@ interface Template
 }
 ```
 
-For email notifications, also implement `ToMail`:
+`ToMail` is required for built-in mail notifications:
 
 ```php
 interface ToMail extends Template
@@ -173,107 +93,106 @@ interface ToMail extends Template
 }
 ```
 
-## Adding Support for Other Channels
-
-### Slack Example
-
-Implement a `toSlack()` method in your template:
+## Custom Mail Template
 
 ```php
-use Illuminate\Notifications\Messages\SlackMessage;
+<?php
 
-class CustomNewDevice implements ToMail
+namespace App\Notifications\AuthLogs;
+
+use Akira\LaravelAuthLogs\Contracts\ToMail;
+use Illuminate\Notifications\Messages\MailMessage;
+
+final readonly class SecurityNewDevice implements ToMail
 {
-    // ... constructor ...
+    public function __construct(
+        private string $loginAt,
+        private string $ipAddress,
+        private string $location,
+        private string $userAgent,
+    ) {}
 
     public function toMail(mixed $notifiable): MailMessage
     {
-        // ... email implementation ...
-    }
-
-    public function toSlack(mixed $notifiable): SlackMessage
-    {
-        return (new SlackMessage)
-            ->warning()
-            ->content('New device login detected')
-            ->attachment(function ($attachment) use ($notifiable) {
-                $attachment
-                    ->title('Login Details')
-                    ->fields([
-                        'User' => $notifiable->email,
-                        'Time' => $this->loginAt,
-                        'Location' => $this->location,
-                        'IP' => $this->ipAddress,
-                    ]);
-            });
+        return (new MailMessage)
+            ->subject('Security alert: new device login')
+            ->line('A new device logged into your account.')
+            ->line("Date: {$this->loginAt}")
+            ->line("IP address: {$this->ipAddress}")
+            ->line("User agent: {$this->userAgent}")
+            ->line("Location: {$this->location}");
     }
 }
 ```
 
-Then create a custom notification class:
+Register it:
 
 ```php
-namespace App\Notifications;
+'templates' => [
+    'new_device' => [
+        'notification' => env('AUTH_LOGS_NEW_DEVICE_NOTIFICATION', true),
+        'template' => \App\Notifications\AuthLogs\SecurityNewDevice::class,
+    ],
+],
+```
 
-use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
+## Custom Non-Mail Notifications
 
-class CustomAuthLogsNotification extends AuthLogsNotification
+The package's notification class is `final`, so do not extend it. Replace the listener instead.
+
+```php
+<?php
+
+namespace App\Listeners;
+
+use Akira\LaravelAuthLogs\Actions\CreateAuthenticationLog;
+use App\Notifications\SecuritySlackNotification;
+use Illuminate\Auth\Events\Login;
+
+final class NotifySecurityTeamOnLogin
 {
-    public function toSlack(mixed $notifiable)
+    public function handle(Login $event): void
     {
-        return $this->template->toSlack($notifiable);
+        $log = CreateAuthenticationLog::for($event->user, isSuccessFull: true);
+
+        $event->user->notify(new SecuritySlackNotification($log));
     }
 }
 ```
 
-## Notification Queue
+Then configure the custom listener:
 
-By default, authentication notifications are queued for asynchronous processing. Ensure your queue worker is running:
-
-```bash
-php artisan queue:work
+```php
+'listeners' => [
+    'login' => \App\Listeners\NotifySecurityTeamOnLogin::class,
+],
 ```
 
-For immediate delivery, remove the `ShouldQueue` implementation from a custom notification class.
+## Location Text
+
+Notification templates receive a string location. The package uses stored location data when available, otherwise it attempts a geolocation lookup. If no location can be resolved, the value is `Unknown`.
 
 ## Testing Notifications
 
-Test that notifications are sent correctly:
-
 ```php
+use Akira\LaravelAuthLogs\Notifications\AuthLogsNotification;
 use Illuminate\Support\Facades\Notification;
 
-public function test_new_device_notification_sent()
-{
-    Notification::fake();
+Notification::fake();
 
-    $user = User::factory()->create();
+// Trigger login or failed login.
 
-    // Simulate login
-    Auth::login($user);
-
-    Notification::assertSentTo(
-        $user,
-        \Akira\LaravelAuthLogs\Notifications\AuthLogsNotification::class
-    );
-}
+Notification::assertSentTo($user, AuthLogsNotification::class);
 ```
+
+For custom listeners, assert your custom notification class instead.
 
 ## Localization
 
-Customize notification text by publishing translations:
+Publish translations if you want to customize the built-in notification strings:
 
 ```bash
 php artisan vendor:publish --tag="laravel-auth-logs-translations"
-```
-
-Edit the translation file:
-
-```json
-{
-    "New device login": "Novo dispositivo conectado",
-    "Failed login attempt": "Tentativa de login falhada"
-}
 ```
 
 **Previous:** [Usage](03-usage.md) | **Next:** [Advanced Usage](05-advanced-usage.md)
