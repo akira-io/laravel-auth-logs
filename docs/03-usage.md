@@ -6,12 +6,13 @@ Once installed and configured, the package automatically tracks authentication a
 
 ### Automatic Logging
 
-After adding the `AuthLogs` trait to your User model, authentication events are logged automatically:
+After adding the `AuthLogs` trait to your User model, these authentication events are logged automatically:
 
 - **Login**: Successful authentication attempts
 - **Failed Login**: Failed authentication attempts with incorrect credentials
 - **Logout**: User-initiated logouts
-- **Other Device Logout**: When a user logs out of other devices
+
+The package also subscribes to `OtherDeviceLogout` as a customization hook. Its default listener does not write a log entry.
 
 ### Accessing Authentication Logs
 
